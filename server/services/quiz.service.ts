@@ -1,0 +1,119 @@
+import "server-only";
+import { TRPCError } from "@trpc/server";
+import { eq, asc } from "drizzle-orm";
+import { db } from "@/server/db";
+import { quizzes, questions, quizAttempts } from "@/server/db/schema/quizzes";
+import type { SubmitQuizInput } from "@/lib/validations/quiz";
+
+export async function getQuizForStudent(quizId: string) {
+  const [quiz] = await db
+    .select({
+      id: quizzes.id,
+      title: quizzes.title,
+      passingScore: quizzes.passingScore,
+      lessonId: quizzes.lessonId,
+    })
+    .from(quizzes)
+    .where(eq(quizzes.id, quizId));
+
+  if (!quiz) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Quiz not found" });
+  }
+
+  const quizQuestions = await db
+    .select({
+      id: questions.id,
+      text: questions.text,
+      type: questions.type,
+      options: questions.options,
+      position: questions.position,
+    })
+    .from(questions)
+    .where(eq(questions.quizId, quizId))
+    .orderBy(asc(questions.position));
+
+  return {
+    ...quiz,
+    questions: quizQuestions,
+  };
+}
+
+export async function getQuizByLessonId(lessonId: string) {
+  const [quiz] = await db
+    .select({ id: quizzes.id, title: quizzes.title, passingScore: quizzes.passingScore })
+    .from(quizzes)
+    .where(eq(quizzes.lessonId, lessonId));
+
+  return quiz ?? null;
+}
+
+export async function gradeQuiz(
+  userId: string,
+  input: SubmitQuizInput
+) {
+  const [quiz] = await db
+    .select({ id: quizzes.id, passingScore: quizzes.passingScore })
+    .from(quizzes)
+    .where(eq(quizzes.id, input.quizId));
+
+  if (!quiz) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Quiz not found" });
+  }
+
+  const quizQuestions = await db
+    .select({
+      id: questions.id,
+      correctOptions: questions.correctOptions,
+    })
+    .from(questions)
+    .where(eq(questions.quizId, input.quizId));
+
+  const correctMap = new Map(
+    quizQuestions.map((q) => [q.id, q.correctOptions])
+  );
+
+  let correctCount = 0;
+  const feedback: Array<{
+    questionId: string;
+    correct: boolean;
+    correctOptions: string[];
+  }> = [];
+
+  for (const answer of input.answers) {
+    const correctOpts = correctMap.get(answer.questionId);
+    if (!correctOpts) continue;
+
+    const isCorrect =
+      correctOpts.length === answer.selectedOptions.length &&
+      correctOpts.every((opt) => answer.selectedOptions.includes(opt));
+
+    if (isCorrect) correctCount++;
+
+    feedback.push({
+      questionId: answer.questionId,
+      correct: isCorrect,
+      correctOptions: correctOpts,
+    });
+  }
+
+  const totalQuestions = quizQuestions.length;
+  const score = totalQuestions === 0 ? 0 : Math.round((correctCount / totalQuestions) * 100);
+  const passed = score >= quiz.passingScore;
+
+  const [attempt] = await db
+    .insert(quizAttempts)
+    .values({
+      userId,
+      quizId: input.quizId,
+      answers: input.answers,
+      score,
+      passed,
+    })
+    .returning({
+      id: quizAttempts.id,
+      score: quizAttempts.score,
+      passed: quizAttempts.passed,
+    });
+
+  return { ...attempt, feedback };
+}

@@ -1,0 +1,287 @@
+import "server-only";
+import { TRPCError } from "@trpc/server";
+import { eq, and, isNull, desc, asc, sql, ilike, count } from "drizzle-orm";
+import { db } from "@/server/db";
+import { courses, categories, modules, lessons } from "@/server/db/schema/courses";
+import { enrollments } from "@/server/db/schema/learning";
+import { reviews } from "@/server/db/schema/social";
+import { users } from "@/server/db/schema/users";
+import { slugify } from "@/lib/utils";
+import type { CreateCourseInput, UpdateCourseInput, CourseListInput } from "@/lib/validations/course";
+
+export async function createCourse(teacherId: string, input: CreateCourseInput) {
+  const slug = slugify(input.title) + "-" + Date.now().toString(36);
+  const [course] = await db
+    .insert(courses)
+    .values({
+      title: input.title,
+      slug,
+      description: input.description,
+      categoryId: input.categoryId,
+      thumbnail: input.thumbnail,
+      price: input.price ?? "0",
+      teacherId,
+    })
+    .returning({
+      id: courses.id,
+      slug: courses.slug,
+      title: courses.title,
+    });
+  return course;
+}
+
+export async function updateCourse(
+  teacherId: string,
+  role: string,
+  input: UpdateCourseInput
+) {
+  const [existing] = await db
+    .select({ teacherId: courses.teacherId })
+    .from(courses)
+    .where(and(eq(courses.id, input.id), isNull(courses.deletedAt)));
+
+  if (!existing) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+  }
+  if (existing.teacherId !== teacherId && role !== "ADMIN") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not the course owner" });
+  }
+
+  const { id, ...data } = input;
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+  if (data.thumbnail !== undefined) updateData.thumbnail = data.thumbnail;
+  if (data.price !== undefined) updateData.price = data.price;
+  if (data.status !== undefined) updateData.status = data.status;
+
+  const [updated] = await db
+    .update(courses)
+    .set(updateData)
+    .where(eq(courses.id, id))
+    .returning({
+      id: courses.id,
+      slug: courses.slug,
+      title: courses.title,
+      status: courses.status,
+    });
+  return updated;
+}
+
+export async function publishCourse(courseId: string, teacherId: string, role: string) {
+  const [existing] = await db
+    .select({ teacherId: courses.teacherId })
+    .from(courses)
+    .where(and(eq(courses.id, courseId), isNull(courses.deletedAt)));
+
+  if (!existing) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+  }
+  if (existing.teacherId !== teacherId && role !== "ADMIN") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not the course owner" });
+  }
+
+  const lessonCount = await db
+    .select({ count: count() })
+    .from(lessons)
+    .where(eq(lessons.courseId, courseId));
+
+  if (!lessonCount[0] || lessonCount[0].count === 0) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Cannot publish a course with no lessons",
+    });
+  }
+
+  const [updated] = await db
+    .update(courses)
+    .set({ status: "PUBLISHED" })
+    .where(eq(courses.id, courseId))
+    .returning({ id: courses.id, status: courses.status });
+  return updated;
+}
+
+export async function deleteCourse(courseId: string, teacherId: string, role: string) {
+  const [existing] = await db
+    .select({ teacherId: courses.teacherId })
+    .from(courses)
+    .where(and(eq(courses.id, courseId), isNull(courses.deletedAt)));
+
+  if (!existing) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+  }
+  if (existing.teacherId !== teacherId && role !== "ADMIN") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Not the course owner" });
+  }
+
+  await db
+    .update(courses)
+    .set({ deletedAt: new Date() })
+    .where(eq(courses.id, courseId));
+  return { success: true };
+}
+
+export async function getCatalog(input: CourseListInput) {
+  const conditions = [
+    isNull(courses.deletedAt),
+    eq(courses.status, "PUBLISHED"),
+  ];
+
+  if (input.categoryId) {
+    conditions.push(eq(courses.categoryId, input.categoryId));
+  }
+  if (input.search) {
+    conditions.push(
+      sql`to_tsvector('english', ${courses.title} || ' ' || coalesce(${courses.description}, '')) @@ plainto_tsquery('english', ${input.search})`
+    );
+  }
+
+  const orderBy =
+    input.sort === "newest"
+      ? desc(courses.createdAt)
+      : input.sort === "popular"
+        ? desc(
+            sql`(SELECT count(*) FROM enrollments WHERE enrollments.course_id = courses.id)`
+          )
+        : desc(
+            sql`(SELECT coalesce(avg(rating), 0) FROM reviews WHERE reviews.course_id = courses.id)`
+          );
+
+  const [courseList, totalResult] = await Promise.all([
+    db
+      .select({
+        id: courses.id,
+        slug: courses.slug,
+        title: courses.title,
+        description: courses.description,
+        thumbnail: courses.thumbnail,
+        price: courses.price,
+        totalDuration: courses.totalDuration,
+        teacherName: users.name,
+        teacherAvatar: users.avatar,
+        categoryName: categories.name,
+        categorySlug: categories.slug,
+        createdAt: courses.createdAt,
+      })
+      .from(courses)
+      .leftJoin(users, eq(courses.teacherId, users.id))
+      .leftJoin(categories, eq(courses.categoryId, categories.id))
+      .where(and(...conditions))
+      .orderBy(orderBy)
+      .limit(input.limit)
+      .offset(input.offset),
+    db
+      .select({ count: count() })
+      .from(courses)
+      .where(and(...conditions)),
+  ]);
+
+  return {
+    courses: courseList,
+    total: totalResult[0]?.count ?? 0,
+  };
+}
+
+export async function getCourseBySlug(slug: string, userId?: string) {
+  const [course] = await db
+    .select({
+      id: courses.id,
+      slug: courses.slug,
+      title: courses.title,
+      description: courses.description,
+      thumbnail: courses.thumbnail,
+      price: courses.price,
+      status: courses.status,
+      totalDuration: courses.totalDuration,
+      teacherId: courses.teacherId,
+      teacherName: users.name,
+      teacherAvatar: users.avatar,
+      teacherBio: users.bio,
+      categoryName: categories.name,
+      createdAt: courses.createdAt,
+    })
+    .from(courses)
+    .leftJoin(users, eq(courses.teacherId, users.id))
+    .leftJoin(categories, eq(courses.categoryId, categories.id))
+    .where(and(eq(courses.slug, slug), isNull(courses.deletedAt)));
+
+  if (!course) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+  }
+
+  const [courseModules, avgRatingResult, enrollmentCountResult, isEnrolled] =
+    await Promise.all([
+      db
+        .select({
+          id: modules.id,
+          title: modules.title,
+          position: modules.position,
+        })
+        .from(modules)
+        .where(eq(modules.courseId, course.id))
+        .orderBy(asc(modules.position)),
+      db
+        .select({ avg: sql<number>`coalesce(avg(${reviews.rating}), 0)` })
+        .from(reviews)
+        .where(eq(reviews.courseId, course.id)),
+      db
+        .select({ count: count() })
+        .from(enrollments)
+        .where(eq(enrollments.courseId, course.id)),
+      userId
+        ? db
+            .select({ id: enrollments.id })
+            .from(enrollments)
+            .where(
+              and(
+                eq(enrollments.userId, userId),
+                eq(enrollments.courseId, course.id)
+              )
+            )
+        : Promise.resolve([]),
+    ]);
+
+  const modulesWithLessons = await Promise.all(
+    courseModules.map(async (mod) => {
+      const modLessons = await db
+        .select({
+          id: lessons.id,
+          title: lessons.title,
+          duration: lessons.duration,
+          position: lessons.position,
+          isFree: lessons.isFree,
+        })
+        .from(lessons)
+        .where(eq(lessons.moduleId, mod.id))
+        .orderBy(asc(lessons.position));
+      return { ...mod, lessons: modLessons };
+    })
+  );
+
+  return {
+    ...course,
+    modules: modulesWithLessons,
+    avgRating: Number(avgRatingResult[0]?.avg ?? 0),
+    enrollmentCount: enrollmentCountResult[0]?.count ?? 0,
+    isEnrolled: isEnrolled.length > 0,
+  };
+}
+
+export async function getTeacherCourses(teacherId: string) {
+  const courseList = await db
+    .select({
+      id: courses.id,
+      slug: courses.slug,
+      title: courses.title,
+      status: courses.status,
+      thumbnail: courses.thumbnail,
+      createdAt: courses.createdAt,
+      enrollmentCount: sql<number>`(SELECT count(*) FROM enrollments WHERE enrollments.course_id = courses.id)`,
+    })
+    .from(courses)
+    .where(and(eq(courses.teacherId, teacherId), isNull(courses.deletedAt)))
+    .orderBy(desc(courses.createdAt));
+
+  return courseList;
+}
