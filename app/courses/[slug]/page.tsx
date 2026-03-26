@@ -7,9 +7,13 @@ import { Navbar } from "@/components/layout/Navbar";
 import { RatingStars } from "@/components/course/RatingStars";
 import { ReviewSection } from "@/components/course/ReviewSection";
 import { formatDuration, formatDate } from "@/lib/utils";
-import { Clock, Users, BookOpen, PlayCircle, Lock, Loader2 } from "lucide-react";
+import { Clock, Users, BookOpen, PlayCircle, Lock, Loader2, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
+import { AnimatedPage, ScrollReveal } from "@/components/ui/animated";
+import { springBounce, collapseVariants, staggerContainer, fadeInUp } from "@/lib/motion";
 
 export default function CourseDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -31,12 +35,31 @@ export default function CourseDetailPage() {
     },
   });
 
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+
+  function toggleModule(moduleId: string) {
+    setExpandedModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(moduleId)) {
+        next.delete(moduleId);
+      } else {
+        next.add(moduleId);
+      }
+      return next;
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader2 className="h-8 w-8 text-muted-foreground" />
+          </motion.div>
         </div>
       </div>
     );
@@ -46,9 +69,13 @@ export default function CourseDetailPage() {
     return (
       <div className="min-h-screen">
         <Navbar />
-        <div className="flex items-center justify-center py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-center py-20"
+        >
           <p className="text-muted-foreground">Course not found</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -78,162 +105,254 @@ export default function CourseDetailPage() {
     <div className="min-h-screen">
       <Navbar />
 
-      <div className="border-b border-border/40 bg-card/50">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              {course.categoryName && (
-                <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                  {course.categoryName}
-                </span>
-              )}
-              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-                {course.title}
-              </h1>
-              {course.description && (
-                <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                  {course.description}
-                </p>
-              )}
-
-              <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <RatingStars rating={course.avgRating} size="sm" />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4" />
-                  {course.enrollmentCount} students
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <BookOpen className="h-4 w-4" />
-                  {totalLessons} lessons
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4" />
-                  {formatDuration(course.totalDuration)}
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-bold">
-                  {course.teacherAvatar ? (
-                    <img
-                      src={course.teacherAvatar}
-                      alt={course.teacherName ?? ""}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  ) : (
-                    course.teacherName?.[0]?.toUpperCase()
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{course.teacherName}</p>
-                  {course.teacherBio && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {course.teacherBio}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center lg:items-end">
-              <div className="w-full max-w-xs rounded-xl border border-border/50 bg-card p-6">
-                {course.thumbnail && (
-                  <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-lg">
-                    <Image
-                      src={course.thumbnail}
-                      alt={course.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-                <div className="text-2xl font-bold">
-                  {isFree ? "Free" : `$${course.price}`}
-                </div>
-                {course.isEnrolled ? (
-                  <button
-                    onClick={handleStartLearning}
-                    className="mt-4 w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+      <AnimatedPage>
+        {/* Hero */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="border-b border-border/40 bg-card/50"
+        >
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
+                className="lg:col-span-2"
+              >
+                {course.categoryName && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary"
                   >
-                    Continue Learning
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleEnroll}
-                    disabled={enroll.isPending}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    {enroll.isPending && (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    )}
-                    {isFree ? "Enroll for free" : `Enroll — $${course.price}`}
-                  </button>
+                    {course.categoryName}
+                  </motion.span>
                 )}
-                <p className="mt-3 text-center text-[10px] text-muted-foreground">
-                  Updated {formatDate(course.createdAt)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                  {course.title}
+                </h1>
+                {course.description && (
+                  <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                    {course.description}
+                  </p>
+                )}
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <h2 className="text-xl font-bold">Curriculum</h2>
-            <div className="mt-4 space-y-4">
-              {course.modules.map((mod) => (
-                <div
-                  key={mod.id}
-                  className="rounded-xl border border-border/50 bg-card"
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  variants={staggerContainer}
+                  className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground"
                 >
-                  <div className="flex items-center justify-between border-b border-border/30 px-4 py-3">
-                    <h3 className="text-sm font-semibold">{mod.title}</h3>
-                    <span className="text-xs text-muted-foreground">
-                      {mod.lessons.length} lessons
-                    </span>
+                  {[
+                    { icon: null, content: <RatingStars rating={course.avgRating} size="sm" /> },
+                    { icon: Users, content: `${course.enrollmentCount} students` },
+                    { icon: BookOpen, content: `${totalLessons} lessons` },
+                    { icon: Clock, content: formatDuration(course.totalDuration) },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      variants={fadeInUp}
+                      className="flex items-center gap-1.5"
+                    >
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      {typeof item.content === "string" ? <span>{item.content}</span> : item.content}
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-4 flex items-center gap-3"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-bold overflow-hidden">
+                    {course.teacherAvatar ? (
+                      <Image
+                        src={course.teacherAvatar}
+                        alt={course.teacherName ?? ""}
+                        width={36}
+                        height={36}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      course.teacherName?.[0]?.toUpperCase()
+                    )}
                   </div>
-                  <div className="divide-y divide-border/30">
-                    {mod.lessons.map((lesson) => (
-                      <div
-                        key={lesson.id}
-                        className="flex items-center justify-between px-4 py-2.5"
-                      >
-                        <div className="flex items-center gap-3">
-                          {lesson.isFree || course.isEnrolled ? (
-                            <PlayCircle className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Lock className="h-4 w-4 text-muted-foreground" />
-                          )}
-                          <span className="text-sm">{lesson.title}</span>
-                          {lesson.isFree && !course.isEnrolled && (
-                            <span className="rounded bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
-                              FREE
+                  <div>
+                    <p className="text-sm font-medium">{course.teacherName}</p>
+                    {course.teacherBio && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {course.teacherBio}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Enrollment card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
+                className="flex flex-col items-center lg:items-end"
+              >
+                <motion.div
+                  whileHover={{
+                    boxShadow: "0 8px 32px rgba(225, 29, 72, 0.08)",
+                    borderColor: "rgba(225, 29, 72, 0.3)",
+                  }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full max-w-xs rounded-xl border border-border/50 bg-card p-6"
+                >
+                  {course.thumbnail && (
+                    <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-lg">
+                      <Image
+                        src={course.thumbnail}
+                        alt={course.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.5 }}
+                    className="text-2xl font-bold"
+                  >
+                    {isFree ? "Free" : `$${course.price}`}
+                  </motion.div>
+                  {course.isEnrolled ? (
+                    <motion.button
+                      onClick={handleStartLearning}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={springBounce}
+                      className="mt-4 w-full cursor-pointer rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                    >
+                      Continue Learning
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={handleEnroll}
+                      disabled={enroll.isPending}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={springBounce}
+                      className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {enroll.isPending && (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      )}
+                      {isFree ? "Enroll for free" : `Enroll — $${course.price}`}
+                    </motion.button>
+                  )}
+                  <p className="mt-3 text-center text-[10px] text-muted-foreground">
+                    Updated {formatDate(course.createdAt)}
+                  </p>
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Curriculum */}
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <ScrollReveal>
+                <h2 className="text-xl font-bold">Curriculum</h2>
+              </ScrollReveal>
+              <div className="mt-4 space-y-3">
+                {course.modules.map((mod, modIndex) => {
+                  const isExpanded = expandedModules.has(mod.id);
+                  return (
+                    <ScrollReveal key={mod.id} delay={modIndex * 0.05}>
+                      <div className="overflow-hidden rounded-xl border border-border/50 bg-card">
+                        <button
+                          onClick={() => toggleModule(mod.id)}
+                          className="flex w-full cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-accent/30"
+                        >
+                          <h3 className="text-sm font-semibold">{mod.title}</h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {mod.lessons.length} lessons
                             </span>
+                            <motion.span
+                              animate={{ rotate: isExpanded ? 180 : 0 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                            >
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            </motion.span>
+                          </div>
+                        </button>
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              variants={collapseVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="exit"
+                              className="overflow-hidden"
+                            >
+                              <div className="divide-y divide-border/30 border-t border-border/30">
+                                {mod.lessons.map((lesson, lessonIndex) => (
+                                  <motion.div
+                                    key={lesson.id}
+                                    initial={{ opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{
+                                      delay: lessonIndex * 0.04,
+                                      type: "spring",
+                                      stiffness: 260,
+                                      damping: 20,
+                                    }}
+                                    className="flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-accent/20"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      {lesson.isFree || course.isEnrolled ? (
+                                        <PlayCircle className="h-4 w-4 text-primary" />
+                                      ) : (
+                                        <Lock className="h-4 w-4 text-muted-foreground" />
+                                      )}
+                                      <span className="text-sm">{lesson.title}</span>
+                                      {lesson.isFree && !course.isEnrolled && (
+                                        <span className="rounded bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                                          FREE
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                      {formatDuration(lesson.duration)}
+                                    </span>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </motion.div>
                           )}
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDuration(lesson.duration)}
-                        </span>
+                        </AnimatePresence>
                       </div>
-                    ))}
+                    </ScrollReveal>
+                  );
+                })}
+              </div>
+
+              <ScrollReveal delay={0.2}>
+                <div className="mt-12">
+                  <h2 className="text-xl font-bold">Reviews</h2>
+                  <div className="mt-4">
+                    <ReviewSection courseId={course.id} />
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="mt-12">
-              <h2 className="text-xl font-bold">Reviews</h2>
-              <div className="mt-4">
-                <ReviewSection courseId={course.id} />
-              </div>
+              </ScrollReveal>
             </div>
           </div>
         </div>
-      </div>
+      </AnimatedPage>
     </div>
   );
 }

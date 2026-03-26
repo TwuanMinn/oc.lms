@@ -9,6 +9,8 @@ import { loginSchema, type LoginInput } from "@/lib/validations/user";
 import { signIn } from "@/lib/auth-client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "motion/react";
+import { springBounce } from "@/lib/motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,22 +47,50 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+      {/* Background ambience */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5 }}
+          className="absolute top-1/3 left-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl"
+        />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        className="w-full max-w-sm"
+      >
         <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
+          <motion.div
+            whileHover={{ rotate: 8, scale: 1.1 }}
+            transition={springBounce}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold"
+          >
             L
-          </div>
+          </motion.div>
           <span className="text-lg font-semibold tracking-tight">LMS</span>
         </Link>
 
-        <div className="rounded-xl border border-border/50 bg-card p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
+          className="rounded-xl border border-border/50 bg-card p-6"
+        >
           <h1 className="text-center text-xl font-bold">Welcome back</h1>
           <p className="mt-1 text-center text-sm text-muted-foreground">
             Sign in to continue learning
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               <label htmlFor="email" className="text-sm font-medium">
                 Email
               </label>
@@ -69,16 +99,24 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 {...register("email")}
-                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring transition-all focus:ring-2 focus:shadow-lg focus:shadow-primary/5"
               />
               {errors.email && (
-                <p className="mt-1 text-xs text-destructive">
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-xs text-destructive"
+                >
                   {errors.email.message}
-                </p>
+                </motion.p>
               )}
-            </div>
+            </motion.div>
 
-            <div>
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.25 }}
+            >
               <label htmlFor="password" className="text-sm font-medium">
                 Password
               </label>
@@ -87,36 +125,48 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 {...register("password")}
-                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2"
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring transition-all focus:ring-2 focus:shadow-lg focus:shadow-primary/5"
               />
               {errors.password && (
-                <p className="mt-1 text-xs text-destructive">
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-xs text-destructive"
+                >
                   {errors.password.message}
-                </p>
+                </motion.p>
               )}
-            </div>
+            </motion.div>
 
-            <button
+            <motion.button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={springBounce}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50"
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               Sign in
-            </button>
+            </motion.button>
           </form>
 
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-4 text-center text-sm text-muted-foreground"
+          >
             Don&apos;t have an account?{" "}
             <Link
               href="/register"
-              className="font-medium text-primary hover:text-primary/80"
+              className="font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Sign up
             </Link>
-          </p>
-        </div>
-      </div>
+          </motion.p>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
