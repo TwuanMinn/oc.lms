@@ -1,7 +1,6 @@
 "use client";
 
 import { trpc } from "@/lib/trpc/client";
-import { useSession } from "@/lib/auth-client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -9,12 +8,13 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import { BookOpen, Plus, Users as UsersIcon } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatDate } from "@/lib/utils";
 
 export default function TeacherCoursesPage() {
   const { data: courses, isLoading } = trpc.course.myCoursesAsTeacher.useQuery();
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     DRAFT: "bg-amber-500/10 text-amber-500",
     PUBLISHED: "bg-green-500/10 text-green-500",
     ARCHIVED: "bg-muted text-muted-foreground",
@@ -49,18 +49,19 @@ export default function TeacherCoursesPage() {
               </div>
             ) : courses && courses.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {courses.map((course) => (
+                {courses.map((course: { id: string; title: string; thumbnail?: string | null; status: string; enrollmentCount: number; createdAt: string }) => (
                   <Link
                     key={course.id}
                     href={`/dashboard/teacher/courses/${course.id}`}
                     className="group rounded-xl border border-border/50 bg-card p-4 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
                   >
                     {course.thumbnail ? (
-                      <div className="mb-3 aspect-video w-full overflow-hidden rounded-lg bg-muted">
-                        <img
+                      <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                        <Image
                           src={course.thumbnail}
                           alt={course.title}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     ) : (
@@ -74,7 +75,7 @@ export default function TeacherCoursesPage() {
                     <div className="mt-2 flex items-center justify-between">
                       <span
                         className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${
-                          statusColors[course.status]
+                          statusColors[course.status] ?? ""
                         }`}
                       >
                         {course.status}

@@ -6,7 +6,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { CourseCard } from "@/components/course/CourseCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
-import { Search, BookOpen } from "lucide-react";
+import { Footer } from "@/components/layout/Footer";
+import { Search, BookOpen, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { AnimatedPage, StaggerGrid, StaggerItem, ScrollReveal } from "@/components/ui/animated";
 import { springBounce } from "@/lib/motion";
@@ -14,19 +15,22 @@ import { springBounce } from "@/lib/motion";
 export default function CoursesPage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "popular" | "rating">("newest");
+  const [category, setCategory] = useState<string>("");
 
+  const { data: categories } = trpc.course.categories.useQuery();
   const { data, isLoading } = trpc.course.list.useQuery({
     limit: 20,
     offset: 0,
     search: search || undefined,
     sort,
+    categoryId: category || undefined,
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Navbar />
       <AnimatedPage>
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <main className="mx-auto max-w-7xl flex-1 px-4 py-8 sm:px-6">
           <ScrollReveal>
             <div className="mb-8">
               <h1 className="text-3xl font-bold tracking-tight">Course catalog</h1>
@@ -42,15 +46,36 @@ export default function CoursesPage() {
             transition={{ delay: 0.15, duration: 0.4 }}
             className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search courses..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none ring-ring transition-shadow focus:ring-2 focus:shadow-lg focus:shadow-primary/5"
-              />
+            <div className="flex items-center gap-3">
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search courses..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none ring-ring transition-shadow focus:ring-2 focus:shadow-lg focus:shadow-primary/5"
+                />
+              </div>
+
+              {/* Category filter */}
+              {categories && categories.length > 0 && (
+                <div className="relative">
+                  <Filter className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="appearance-none rounded-lg border border-input bg-background py-2 pl-8 pr-8 text-xs outline-none ring-ring transition-shadow focus:ring-2 cursor-pointer"
+                  >
+                    <option value="">All categories</option>
+                    {categories.map((cat: { id: string; name: string }) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -147,6 +172,7 @@ export default function CoursesPage() {
           )}
         </main>
       </AnimatedPage>
+      <Footer />
     </div>
   );
 }

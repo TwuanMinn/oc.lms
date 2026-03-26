@@ -4,6 +4,10 @@ import { createCourseSchema, updateCourseSchema, courseListSchema } from "@/lib/
 import * as courseService from "@/server/services/course.service";
 
 export const courseRouter = router({
+  categories: publicProcedure.query(async () => {
+    return courseService.getCategories();
+  }),
+
   list: publicProcedure.input(courseListSchema).query(async ({ input }) => {
     return courseService.getCatalog(input);
   }),

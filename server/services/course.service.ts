@@ -9,6 +9,13 @@ import { users } from "@/server/db/schema/users";
 import { slugify } from "@/lib/utils";
 import type { CreateCourseInput, UpdateCourseInput, CourseListInput } from "@/lib/validations/course";
 
+export async function getCategories() {
+  return db
+    .select({ id: categories.id, name: categories.name, slug: categories.slug })
+    .from(categories)
+    .orderBy(asc(categories.name));
+}
+
 export async function createCourse(teacherId: string, input: CreateCourseInput) {
   const slug = slugify(input.title) + "-" + Date.now().toString(36);
   const [course] = await db

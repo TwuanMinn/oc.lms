@@ -7,8 +7,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "@/lib/validations/user";
 import { signUp } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, X } from "lucide-react";
 import { toast } from "sonner";
+
+const PASSWORD_RULES = [
+  { label: "8+ characters", test: (v: string) => v.length >= 8 },
+  { label: "Uppercase letter", test: (v: string) => /[A-Z]/.test(v) },
+  { label: "Number", test: (v: string) => /[0-9]/.test(v) },
+  { label: "Special character", test: (v: string) => /[^a-zA-Z0-9]/.test(v) },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,10 +24,13 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
   });
+
+  const passwordValue = watch("password") ?? "";
 
   async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
@@ -62,60 +72,43 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="name" className="text-sm font-medium">
-                Full name
-              </label>
-              <input
-                id="name"
-                type="text"
-                autoComplete="name"
-                {...register("name")}
-                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2"
-              />
-              {errors.name && (
-                <p className="mt-1 text-xs text-destructive">
-                  {errors.name.message}
-                </p>
-              )}
+              <label htmlFor="name" className="text-sm font-medium">Full name</label>
+              <input id="name" type="text" autoComplete="name" {...register("name")}
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2" />
+              {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
             </div>
 
             <div>
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                {...register("email")}
-                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2"
-              />
-              {errors.email && (
-                <p className="mt-1 text-xs text-destructive">
-                  {errors.email.message}
-                </p>
-              )}
+              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <input id="email" type="email" autoComplete="email" {...register("email")}
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2" />
+              {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                {...register("password")}
-                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2"
-              />
-              {errors.password && (
-                <p className="mt-1 text-xs text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                8+ chars, uppercase, number, special char
-              </p>
+              <label htmlFor="password" className="text-sm font-medium">Password</label>
+              <input id="password" type="password" autoComplete="new-password" {...register("password")}
+                className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none ring-ring focus:ring-2" />
+              {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+
+              {/* Visual password strength indicator */}
+              <div className="mt-2 space-y-1">
+                {PASSWORD_RULES.map((rule) => {
+                  const passed = rule.test(passwordValue);
+                  return (
+                    <div key={rule.label} className="flex items-center gap-1.5">
+                      {passed ? (
+                        <Check className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <X className="h-3 w-3 text-muted-foreground/50" />
+                      )}
+                      <span className={`text-[10px] ${passed ? "text-green-500" : "text-muted-foreground/50"}`}>
+                        {rule.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <button
@@ -130,10 +123,7 @@ export default function RegisterPage() {
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-primary hover:text-primary/80"
-            >
+            <Link href="/login" className="font-medium text-primary hover:text-primary/80">
               Sign in
             </Link>
           </p>

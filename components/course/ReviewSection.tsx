@@ -3,6 +3,7 @@
 import { trpc } from "@/lib/trpc/client";
 import { RatingStars } from "./RatingStars";
 import { formatDate, getInitials } from "@/lib/utils";
+import Image from "next/image";
 
 interface ReviewSectionProps {
   courseId: string;
@@ -31,11 +32,13 @@ export function ReviewSection({ courseId }: ReviewSectionProps) {
           className="rounded-lg border border-border/50 p-4"
         >
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground overflow-hidden">
               {review.userAvatar ? (
-                <img
+                <Image
                   src={review.userAvatar}
                   alt={review.userName ?? ""}
+                  width={36}
+                  height={36}
                   className="h-full w-full rounded-full object-cover"
                 />
               ) : (
