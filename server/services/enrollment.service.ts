@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/server/db";
 import { enrollments } from "@/server/db/schema/learning";
 import { lessons } from "@/server/db/schema/courses";
+import { hasActiveSubscription } from "./billing.service";
 
 export async function enroll(userId: string, courseId: string) {
   const [existing] = await db
@@ -60,6 +61,11 @@ export async function checkAccess(
   if (lesson.isFree) return true;
   if (!userId) return false;
 
+  // Subscription grants access to ALL courses
+  const hasSub = await hasActiveSubscription(userId);
+  if (hasSub) return true;
+
+  // Fallback: per-course enrollment
   const [enrollment] = await db
     .select({ id: enrollments.id })
     .from(enrollments)

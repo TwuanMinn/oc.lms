@@ -47,6 +47,17 @@ export function Navbar() {
           >
             Courses
           </Link>
+          <Link
+            href="/pricing"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-foreground",
+              pathname === "/pricing"
+                ? "text-foreground"
+                : "text-muted-foreground"
+            )}
+          >
+            Pricing
+          </Link>
           {user && (
             <Link
               href={dashboardLink}

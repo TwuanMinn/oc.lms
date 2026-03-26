@@ -9,6 +9,7 @@ import { reviewRouter } from "./review.router";
 import { notificationRouter } from "./notification.router";
 import { searchRouter } from "./search.router";
 import { adminRouter } from "./admin.router";
+import { billingRouter } from "./billing.router";
 
 export const appRouter = router({
   course: courseRouter,
@@ -21,6 +22,8 @@ export const appRouter = router({
   notification: notificationRouter,
   search: searchRouter,
   admin: adminRouter,
+  billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;
+
