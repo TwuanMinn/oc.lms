@@ -16,4 +16,9 @@ export const billingRouter = router({
     .mutation(async ({ ctx, input }) => {
       return billingService.subscribe(ctx.user.id, input.planId);
     }),
+
+  cancel: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      return billingService.cancelSubscription(ctx.user.id);
+    }),
 });

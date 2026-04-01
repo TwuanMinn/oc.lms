@@ -185,7 +185,7 @@ export function AnimatedCounter({ value, suffix = "", className }: AnimatedCount
       transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
       className={className}
     >
-      {isInView ? `${value.toLocaleString()}${suffix}` : "0"}
+      {isInView ? `${value.toLocaleString("en-US")}${suffix}` : "0"}
     </motion.span>
   );
 }

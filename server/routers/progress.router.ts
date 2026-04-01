@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { router, protectedProcedure } from "@/server/trpc";
 import * as progressService from "@/server/services/progress.service";
+import * as notificationService from "@/server/services/notification.service";
 
 export const progressRouter = router({
   markComplete: protectedProcedure
@@ -11,11 +12,23 @@ export const progressRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      return progressService.markLessonComplete(
+      const result = await progressService.markLessonComplete(
         ctx.user.id,
         input.courseId,
         input.lessonId
       );
+
+      if (!result.alreadyComplete && result.percent === 100) {
+        await notificationService.createNotification(
+          ctx.user.id,
+          "COURSE_COMPLETE",
+          "Course completed! 🎉",
+          "Congratulations! You've finished all lessons in this course.",
+          `/dashboard/student`
+        );
+      }
+
+      return result;
     }),
 
   getCourseProgress: protectedProcedure

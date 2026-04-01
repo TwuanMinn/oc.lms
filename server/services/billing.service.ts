@@ -1,5 +1,6 @@
 import "server-only";
 import { eq, and, asc, gt, or, isNull } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { db } from "@/server/db";
 import { plans, subscriptions } from "@/server/db/schema/billing";
 
@@ -48,12 +49,23 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
 }
 
 export async function subscribe(userId: string, planId: string) {
+  // Guard: check for existing active subscription
+  const existing = await getActiveSubscription(userId);
+  if (existing) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "You already have an active subscription. Cancel it first to switch plans.",
+    });
+  }
+
   const [plan] = await db
     .select()
     .from(plans)
     .where(eq(plans.id, planId));
 
-  if (!plan) throw new Error("Plan not found");
+  if (!plan) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Plan not found" });
+  }
 
   let endDate: Date | null = null;
   const now = new Date();
@@ -79,4 +91,26 @@ export async function subscribe(userId: string, planId: string) {
     .returning();
 
   return sub;
+}
+
+export async function cancelSubscription(userId: string) {
+  const active = await getActiveSubscription(userId);
+  if (!active) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "No active subscription to cancel",
+    });
+  }
+
+  const now = new Date();
+
+  await db
+    .update(subscriptions)
+    .set({
+      status: "CANCELLED",
+      cancelledAt: now,
+    })
+    .where(eq(subscriptions.id, active.id));
+
+  return { success: true, cancelledAt: now };
 }

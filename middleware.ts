@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/courses", "/api/auth", "/api/trpc", "/api/inngest", "/api/health"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/courses", "/pricing", "/api/auth", "/api/trpc", "/api/inngest", "/api/health"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicRoute(pathname) || pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
@@ -22,17 +22,30 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Role-based sub-path guards (cookie-based role check)
-  // Better Auth stores role in session — we check via a role cookie set at login
-  const roleCookie = request.cookies.get("user-role");
-  const role = roleCookie?.value;
+  // Role-based sub-path guards: verify role via session API (not spoofable cookie)
+  if (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/teacher")) {
+    try {
+      const sessionRes = await fetch(new URL("/api/auth/get-session", request.url), {
+        headers: { cookie: request.headers.get("cookie") ?? "" },
+      });
 
-  if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard/student", request.url));
-  }
+      if (!sessionRes.ok) {
+        return NextResponse.redirect(new URL("/dashboard/student", request.url));
+      }
 
-  if (pathname.startsWith("/dashboard/teacher") && role !== "TEACHER" && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/dashboard/student", request.url));
+      const session = await sessionRes.json();
+      const role = session?.user?.role as string | undefined;
+
+      if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
+        return NextResponse.redirect(new URL("/dashboard/student", request.url));
+      }
+
+      if (pathname.startsWith("/dashboard/teacher") && role !== "TEACHER" && role !== "ADMIN") {
+        return NextResponse.redirect(new URL("/dashboard/student", request.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/dashboard/student", request.url));
+    }
   }
 
   return NextResponse.next();

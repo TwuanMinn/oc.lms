@@ -4,7 +4,9 @@ import { router, protectedProcedure } from "@/server/trpc";
 import { db } from "@/server/db";
 import { reviews } from "@/server/db/schema/social";
 import { users } from "@/server/db/schema/users";
+import { courses } from "@/server/db/schema/courses";
 import { TRPCError } from "@trpc/server";
+import * as notificationService from "@/server/services/notification.service";
 
 export const reviewRouter = router({
   create: protectedProcedure
@@ -45,6 +47,22 @@ export const reviewRouter = router({
           id: reviews.id,
           rating: reviews.rating,
         });
+
+      // Notify the course teacher about the new review
+      const [course] = await db
+        .select({ teacherId: courses.teacherId, title: courses.title })
+        .from(courses)
+        .where(eq(courses.id, input.courseId));
+
+      if (course && course.teacherId !== ctx.user.id) {
+        await notificationService.createNotification(
+          course.teacherId,
+          "NEW_REVIEW",
+          `New ${input.rating}★ review`,
+          `Someone left a review on "${course.title}"`,
+          `/courses/${input.courseId}`
+        );
+      }
 
       return review;
     }),

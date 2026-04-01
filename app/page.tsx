@@ -17,6 +17,7 @@ import {
   springBounce,
   hoverGlow,
 } from "@/lib/motion";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const features = [
   {
@@ -93,6 +94,13 @@ export default function HomePage() {
             >
               Courses
             </Link>
+            <Link
+              href="/pricing"
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Pricing
+            </Link>
+            <ThemeToggle />
             <Link
               href="/login"
               className="rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -328,6 +336,7 @@ export default function HomePage() {
               </h4>
               <ul className="mt-3 space-y-2">
                 <li><Link href="/courses" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Courses</Link></li>
+                <li><Link href="/pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Pricing</Link></li>
                 <li><Link href="/register" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Get started</Link></li>
               </ul>
             </div>
@@ -336,8 +345,8 @@ export default function HomePage() {
                 Support
               </h4>
               <ul className="mt-3 space-y-2">
-                <li><span className="text-sm text-muted-foreground">Help center</span></li>
-                <li><span className="text-sm text-muted-foreground">Contact</span></li>
+                <li><Link href="/courses" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Help center</Link></li>
+                <li><Link href="/courses" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Contact</Link></li>
               </ul>
             </div>
             <div>
@@ -345,8 +354,8 @@ export default function HomePage() {
                 Legal
               </h4>
               <ul className="mt-3 space-y-2">
-                <li><span className="text-sm text-muted-foreground">Privacy</span></li>
-                <li><span className="text-sm text-muted-foreground">Terms</span></li>
+                <li><Link href="/courses" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Privacy</Link></li>
+                <li><Link href="/courses" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Terms</Link></li>
               </ul>
             </div>
           </div>

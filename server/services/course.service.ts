@@ -249,22 +249,32 @@ export async function getCourseBySlug(slug: string, userId?: string) {
         : Promise.resolve([]),
     ]);
 
-  const modulesWithLessons = await Promise.all(
-    courseModules.map(async (mod) => {
-      const modLessons = await db
-        .select({
-          id: lessons.id,
-          title: lessons.title,
-          duration: lessons.duration,
-          position: lessons.position,
-          isFree: lessons.isFree,
-        })
-        .from(lessons)
-        .where(eq(lessons.moduleId, mod.id))
-        .orderBy(asc(lessons.position));
-      return { ...mod, lessons: modLessons };
+  // Fetch all lessons for this course in ONE query (fixes N+1)
+  const allLessons = await db
+    .select({
+      id: lessons.id,
+      title: lessons.title,
+      duration: lessons.duration,
+      position: lessons.position,
+      isFree: lessons.isFree,
+      moduleId: lessons.moduleId,
     })
-  );
+    .from(lessons)
+    .where(eq(lessons.courseId, course.id))
+    .orderBy(asc(lessons.position));
+
+  // Group lessons by module
+  const lessonsByModule = new Map<string, typeof allLessons>();
+  for (const lesson of allLessons) {
+    const existing = lessonsByModule.get(lesson.moduleId) ?? [];
+    existing.push(lesson);
+    lessonsByModule.set(lesson.moduleId, existing);
+  }
+
+  const modulesWithLessons = courseModules.map((mod) => ({
+    ...mod,
+    lessons: lessonsByModule.get(mod.id) ?? [],
+  }));
 
   return {
     ...course,

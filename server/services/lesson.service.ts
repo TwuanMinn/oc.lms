@@ -10,78 +10,82 @@ import type {
 } from "@/lib/validations/lesson";
 
 export async function createLesson(input: CreateLessonInput) {
-  const [lesson] = await db
-    .insert(lessons)
-    .values(input)
-    .returning({
-      id: lessons.id,
-      title: lessons.title,
-      position: lessons.position,
-    });
+  return db.transaction(async (tx) => {
+    const [lesson] = await tx
+      .insert(lessons)
+      .values(input)
+      .returning({
+        id: lessons.id,
+        title: lessons.title,
+        position: lessons.position,
+      });
 
-  if (input.duration > 0) {
-    await db
-      .update(courses)
-      .set({
-        totalDuration: sql`${courses.totalDuration} + ${input.duration}`,
-      })
-      .where(eq(courses.id, input.courseId));
-  }
+    if (input.duration > 0) {
+      await tx
+        .update(courses)
+        .set({
+          totalDuration: sql`${courses.totalDuration} + ${input.duration}`,
+        })
+        .where(eq(courses.id, input.courseId));
+    }
 
-  return lesson;
+    return lesson;
+  });
 }
 
 export async function updateLesson(input: UpdateLessonInput) {
-  const [existing] = await db
-    .select({ id: lessons.id, duration: lessons.duration, courseId: lessons.courseId })
-    .from(lessons)
-    .where(eq(lessons.id, input.id));
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: lessons.id, duration: lessons.duration, courseId: lessons.courseId })
+      .from(lessons)
+      .where(eq(lessons.id, input.id));
 
-  if (!existing) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
-  }
+    if (!existing) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
+    }
 
-  const { id, ...data } = input;
-  const updateData: Record<string, unknown> = {};
-  if (data.title !== undefined) updateData.title = data.title;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.videoUrl !== undefined) updateData.videoUrl = data.videoUrl;
-  if (data.content !== undefined) updateData.content = data.content;
-  if (data.duration !== undefined) updateData.duration = data.duration;
-  if (data.isFree !== undefined) updateData.isFree = data.isFree;
+    const { id, ...data } = input;
+    const updateData: Record<string, unknown> = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.videoUrl !== undefined) updateData.videoUrl = data.videoUrl;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.duration !== undefined) updateData.duration = data.duration;
+    if (data.isFree !== undefined) updateData.isFree = data.isFree;
 
-  const [updated] = await db
-    .update(lessons)
-    .set(updateData)
-    .where(eq(lessons.id, id))
-    .returning({
-      id: lessons.id,
-      title: lessons.title,
-    });
+    const [updated] = await tx
+      .update(lessons)
+      .set(updateData)
+      .where(eq(lessons.id, id))
+      .returning({
+        id: lessons.id,
+        title: lessons.title,
+      });
 
-  if (data.duration !== undefined && data.duration !== existing.duration) {
-    const diff = data.duration - existing.duration;
-    await db
-      .update(courses)
-      .set({
-        totalDuration: sql`greatest(0, ${courses.totalDuration} + ${diff})`,
-      })
-      .where(eq(courses.id, existing.courseId));
-  }
+    if (data.duration !== undefined && data.duration !== existing.duration) {
+      const diff = data.duration - existing.duration;
+      await tx
+        .update(courses)
+        .set({
+          totalDuration: sql`greatest(0, ${courses.totalDuration} + ${diff})`,
+        })
+        .where(eq(courses.id, existing.courseId));
+    }
 
-  return updated;
+    return updated;
+  });
 }
 
 export async function reorderLessons(items: Array<{ id: string; position: number }>) {
-  await Promise.all(
-    items.map((item) =>
-      db
+  return db.transaction(async (tx) => {
+    for (const item of items) {
+      await tx
         .update(lessons)
         .set({ position: item.position })
-        .where(eq(lessons.id, item.id))
-    )
-  );
-  return { success: true };
+        .where(eq(lessons.id, item.id));
+    }
+    return { success: true };
+  });
 }
 
 export async function createModule(input: CreateModuleInput) {
@@ -106,60 +110,64 @@ export async function updateModule(id: string, title: string) {
 }
 
 export async function reorderModules(items: Array<{ id: string; position: number }>) {
-  await Promise.all(
-    items.map((item) =>
-      db
+  return db.transaction(async (tx) => {
+    for (const item of items) {
+      await tx
         .update(modules)
         .set({ position: item.position })
-        .where(eq(modules.id, item.id))
-    )
-  );
-  return { success: true };
+        .where(eq(modules.id, item.id));
+    }
+    return { success: true };
+  });
 }
 
 export async function deleteModule(moduleId: string) {
-  const moduleLessons = await db
-    .select({ duration: lessons.duration, courseId: lessons.courseId })
-    .from(lessons)
-    .where(eq(lessons.moduleId, moduleId));
+  return db.transaction(async (tx) => {
+    const moduleLessons = await tx
+      .select({ duration: lessons.duration, courseId: lessons.courseId })
+      .from(lessons)
+      .where(eq(lessons.moduleId, moduleId));
 
-  if (moduleLessons.length > 0) {
-    const totalDuration = moduleLessons.reduce((sum, l) => sum + l.duration, 0);
-    const courseId = moduleLessons[0].courseId;
-    await db
-      .update(courses)
-      .set({
-        totalDuration: sql`greatest(0, ${courses.totalDuration} - ${totalDuration})`,
-      })
-      .where(eq(courses.id, courseId));
-  }
+    if (moduleLessons.length > 0) {
+      const totalDuration = moduleLessons.reduce((sum, l) => sum + l.duration, 0);
+      const courseId = moduleLessons[0].courseId;
+      await tx
+        .update(courses)
+        .set({
+          totalDuration: sql`greatest(0, ${courses.totalDuration} - ${totalDuration})`,
+        })
+        .where(eq(courses.id, courseId));
+    }
 
-  await db.delete(modules).where(eq(modules.id, moduleId));
-  return { success: true };
+    await tx.delete(modules).where(eq(modules.id, moduleId));
+    return { success: true };
+  });
 }
 
 export async function deleteLesson(lessonId: string) {
-  const [existing] = await db
-    .select({ duration: lessons.duration, courseId: lessons.courseId })
-    .from(lessons)
-    .where(eq(lessons.id, lessonId));
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ duration: lessons.duration, courseId: lessons.courseId })
+      .from(lessons)
+      .where(eq(lessons.id, lessonId));
 
-  if (!existing) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
-  }
+    if (!existing) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
+    }
 
-  await db.delete(lessons).where(eq(lessons.id, lessonId));
+    await tx.delete(lessons).where(eq(lessons.id, lessonId));
 
-  if (existing.duration > 0) {
-    await db
-      .update(courses)
-      .set({
-        totalDuration: sql`greatest(0, ${courses.totalDuration} - ${existing.duration})`,
-      })
-      .where(eq(courses.id, existing.courseId));
-  }
+    if (existing.duration > 0) {
+      await tx
+        .update(courses)
+        .set({
+          totalDuration: sql`greatest(0, ${courses.totalDuration} - ${existing.duration})`,
+        })
+        .where(eq(courses.id, existing.courseId));
+    }
 
-  return { success: true };
+    return { success: true };
+  });
 }
 
 export async function getLessonById(lessonId: string) {

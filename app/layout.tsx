@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/client";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -24,18 +25,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <TRPCProvider>
-          {children}
-          <Toaster
-            position="bottom-right"
-            richColors
-            closeButton
-            theme="dark"
-          />
-        </TRPCProvider>
+        <ThemeProvider>
+          <TRPCProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              richColors
+              closeButton
+            />
+          </TRPCProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

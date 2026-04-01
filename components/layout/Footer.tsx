@@ -29,7 +29,7 @@ export function Footer() {
               {[
                 { label: "Browse courses", href: "/courses" },
                 { label: "Teach on LMS", href: "/register" },
-                { label: "Pricing", href: "#" },
+                { label: "Pricing", href: "/pricing" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link

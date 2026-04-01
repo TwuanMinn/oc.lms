@@ -3,6 +3,7 @@ import {
   uuid,
   timestamp,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { courses } from "./courses";
@@ -23,7 +24,11 @@ export const enrollments = pgTable(
       .defaultNow(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
-  (table) => [unique("uq_enrollment").on(table.userId, table.courseId)]
+  (table) => [
+    unique("uq_enrollment").on(table.userId, table.courseId),
+    index("idx_enrollments_user").on(table.userId),
+    index("idx_enrollments_course").on(table.courseId),
+  ]
 );
 
 export const progress = pgTable(
@@ -43,7 +48,10 @@ export const progress = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [unique("uq_progress").on(table.userId, table.lessonId)]
+  (table) => [
+    unique("uq_progress").on(table.userId, table.lessonId),
+    index("idx_progress_user_course").on(table.userId, table.courseId),
+  ]
 );
 
 export type Enrollment = typeof enrollments.$inferSelect;

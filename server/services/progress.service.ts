@@ -10,26 +10,28 @@ export async function markLessonComplete(
   courseId: string,
   lessonId: string
 ) {
-  const [existing] = await db
-    .select({ id: progress.id })
-    .from(progress)
-    .where(and(eq(progress.userId, userId), eq(progress.lessonId, lessonId)));
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: progress.id })
+      .from(progress)
+      .where(and(eq(progress.userId, userId), eq(progress.lessonId, lessonId)));
 
-  if (existing) return { alreadyComplete: true };
+    if (existing) return { alreadyComplete: true };
 
-  await db.insert(progress).values({ userId, courseId, lessonId });
+    await tx.insert(progress).values({ userId, courseId, lessonId });
 
-  const percent = await getCourseProgressPercent(userId, courseId);
-  if (percent === 100) {
-    await db
-      .update(enrollments)
-      .set({ completedAt: new Date() })
-      .where(
-        and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
-      );
-  }
+    const percent = await getCourseProgressPercent(userId, courseId);
+    if (percent === 100) {
+      await tx
+        .update(enrollments)
+        .set({ completedAt: new Date() })
+        .where(
+          and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
+        );
+    }
 
-  return { alreadyComplete: false, percent };
+    return { alreadyComplete: false, percent };
+  });
 }
 
 export async function getCourseProgressPercent(

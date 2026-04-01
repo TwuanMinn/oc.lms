@@ -7,6 +7,7 @@ import { ProgressRing } from "./ProgressRing";
 import { RatingStars } from "./RatingStars";
 import { CategoryBadge } from "./CategoryBadge";
 import { motion } from "motion/react";
+import { BookOpen } from "lucide-react";
 
 interface CourseCardProps {
   id: string;
@@ -58,9 +59,10 @@ export function CourseCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center">
-              <span className="text-3xl font-bold text-muted-foreground/30">
-                {title[0]}
+            <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+              <BookOpen className="h-8 w-8 text-primary/25" />
+              <span className="text-lg font-bold text-primary/30">
+                {title.slice(0, 2).toUpperCase()}
               </span>
             </div>
           )}
