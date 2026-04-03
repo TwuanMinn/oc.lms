@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/lib/validations/user";
@@ -11,6 +12,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { springBounce } from "@/lib/motion";
+import { AnimatedShimmerButton } from "@/components/ui/animated";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,7 +37,20 @@ export default function LoginPage() {
         toast.error(result.error.message ?? "Invalid credentials");
       } else {
         toast.success("Welcome back!");
-        router.push("/dashboard/student");
+        const params = new URLSearchParams(window.location.search);
+        const callbackUrl = params.get("callbackUrl");
+        if (callbackUrl) {
+          router.push(callbackUrl);
+        } else {
+          const role = (result.data?.user as { role?: string })?.role;
+          if (role === "ADMIN") {
+            router.push("/dashboard/admin");
+          } else if (role === "TEACHER") {
+            router.push("/dashboard/teacher");
+          } else {
+            router.push("/dashboard/student");
+          }
+        }
         router.refresh();
       }
     } catch {
@@ -48,12 +63,22 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       {/* Background ambience */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5 }}
-          className="absolute top-1/3 left-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl"
+           animate={{
+             x: [0, 50, -50, 0],
+             y: [0, -50, 50, 0],
+           }}
+           transition={{ duration: 15, ease: "linear", repeat: Infinity }}
+           className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/5 blur-3xl"
+        />
+        <motion.div
+           animate={{
+             x: [0, -50, 50, 0],
+             y: [0, 50, -50, 0],
+           }}
+           transition={{ duration: 20, ease: "linear", repeat: Infinity }}
+           className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-rose-500/5 blur-3xl"
         />
       </div>
 
@@ -63,15 +88,20 @@ export default function LoginPage() {
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         className="w-full max-w-sm"
       >
-        <Link href="/" className="mb-8 flex items-center justify-center gap-2">
+        <Link href="/" className="mb-8 flex items-center justify-center">
           <motion.div
-            whileHover={{ rotate: 8, scale: 1.1 }}
+            whileHover={{ scale: 1.05 }}
             transition={springBounce}
-            className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold"
           >
-            L
+            <Image
+              src="/images/logo.png"
+              alt="Green Academy"
+              width={600}
+              height={132}
+              className="h-[7.5rem] w-auto"
+              priority
+            />
           </motion.div>
-          <span className="text-lg font-semibold tracking-tight">LMS</span>
         </Link>
 
         <motion.div
@@ -138,17 +168,16 @@ export default function LoginPage() {
               )}
             </motion.div>
 
-            <motion.button
-              type="submit"
-              disabled={isLoading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={springBounce}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50"
-            >
-              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Sign in
-            </motion.button>
+            <AnimatedShimmerButton className="w-full rounded-lg bg-primary shadow-lg shadow-primary/20">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex w-full cursor-pointer items-center justify-center gap-2 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50"
+              >
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                Sign in
+              </button>
+            </AnimatedShimmerButton>
           </form>
 
           <motion.p

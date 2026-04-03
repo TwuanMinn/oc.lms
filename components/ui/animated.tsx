@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useInView, AnimatePresence } from "motion/react";
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, useEffect, type ReactNode } from "react";
 import {
   fadeInUp,
   staggerContainer,
@@ -187,5 +187,107 @@ export function AnimatedCounter({ value, suffix = "", className }: AnimatedCount
     >
       {isInView ? `${value.toLocaleString("en-US")}${suffix}` : "0"}
     </motion.span>
+  );
+}
+
+// ─── Animated word switcher ───
+interface AnimatedWordSwitcherProps {
+  words: string[];
+  className?: string;
+  interval?: number;
+}
+
+export function AnimatedWordSwitcher({ words, className, interval = 3000 }: AnimatedWordSwitcherProps) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((current) => (current + 1) % words.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [words.length, interval]);
+
+  return (
+    <span className="inline-grid relative">
+      <AnimatePresence mode="popLayout">
+        <motion.span
+          key={index}
+          initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className={className}
+        >
+          {words[index]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
+// ─── Infinite Marquee ───
+interface InfiniteMarqueeProps {
+  children: ReactNode;
+  speed?: number; // seconds to complete one loop
+  className?: string;
+}
+
+export function InfiniteMarquee({ children, speed = 30, className }: InfiniteMarqueeProps) {
+  return (
+    <div className={`overflow-hidden flex w-full relative group ${className || ""}`}>
+      {/* Gradients for fading edges */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent z-10" />
+      
+      <style suppressHydrationWarning>{`
+        @keyframes scroll-marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        .scrolling-track {
+          animation: scroll-marquee ${speed}s linear infinite;
+        }
+        .group:hover .scrolling-track {
+          animation-play-state: paused;
+        }
+      `}</style>
+      
+      <div className="flex w-max scrolling-track">
+        <div className="flex shrink-0 items-stretch">{children}</div>
+        <div className="flex shrink-0 items-stretch">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Animated Shimmer Button Wrapper ───
+interface AnimatedShimmerButtonProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function AnimatedShimmerButton({ children, className }: AnimatedShimmerButtonProps) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.96 }}
+      className={`group relative overflow-hidden inline-flex ${className || ""}`}
+    >
+      <motion.div
+        animate={{
+          x: ["-200%", "300%"],
+        }}
+        transition={{
+          repeat: Infinity,
+          duration: 3,
+          ease: "linear",
+          repeatDelay: 1.5,
+        }}
+        className="pointer-events-none absolute inset-0 z-10 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/20"
+      />
+      <div className="relative z-0 flex w-full h-full items-center justify-center">
+        {children}
+      </div>
+    </motion.div>
   );
 }

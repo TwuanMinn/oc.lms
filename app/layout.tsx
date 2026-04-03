@@ -12,8 +12,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "LMS — Learn, Teach, Grow",
-    template: "%s | LMS",
+    default: "Green Academy — Learn, Teach, Grow",
+    template: "%s | Green Academy",
   },
   description:
     "A modern Learning Management System. Discover courses, track progress, and earn certificates.",

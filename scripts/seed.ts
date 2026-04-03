@@ -1,10 +1,11 @@
+import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as usersSchema from "../server/db/schema/users";
 import * as coursesSchema from "../server/db/schema/courses";
 import * as learningSchema from "../server/db/schema/learning";
 import * as quizzesSchema from "../server/db/schema/quizzes";
-import { hash } from "bcryptjs";
+import { hashPassword } from "better-auth/crypto";
 
 async function seed() {
   const connectionString = process.env.DATABASE_URL;
@@ -20,7 +21,7 @@ async function seed() {
 
   console.log("🌱 Seeding database...\n");
 
-  const passwordHash = await hash("Admin123!", 10);
+  const passwordHash = await hashPassword("Admin123!");
 
   // Users
   const [admin] = await db
@@ -61,6 +62,29 @@ async function seed() {
     .returning({ id: usersSchema.users.id });
 
   console.log("✅ Users created");
+
+  // Accounts (better-auth stores passwords here, not in users table)
+  const userList = [
+    { user: admin, email: "admin@lms.dev" },
+    { user: teacher, email: "teacher@lms.dev" },
+    { user: student, email: "student@lms.dev" },
+  ];
+
+  for (const { user, email } of userList) {
+    if (user) {
+      await db
+        .insert(usersSchema.accounts)
+        .values({
+          userId: user.id,
+          accountId: user.id,
+          providerId: "credential",
+          password: passwordHash,
+        })
+        .onConflictDoNothing();
+    }
+  }
+
+  console.log("✅ Accounts created (auth credentials)");
 
   // Categories
   const [webCat] = await db

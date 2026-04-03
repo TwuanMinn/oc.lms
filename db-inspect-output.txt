@@ -1,0 +1,42 @@
+USERS COLUMNS:
+  id (uuid)
+  email (text)
+  name (text)
+  password_hash (text)
+  role (USER-DEFINED)
+  avatar (text)
+  bio (text)
+  email_verified (boolean)
+  created_at (timestamp with time zone)
+  updated_at (timestamp with time zone)
+  deleted_at (timestamp with time zone)
+
+ACCOUNTS COLUMNS:
+  id (uuid)
+  user_id (uuid)
+  account_id (text)
+  provider_id (text)
+  access_token (text)
+  refresh_token (text)
+  expires_at (timestamp with time zone)
+  password (text)
+  created_at (timestamp with time zone)
+  updated_at (timestamp with time zone)
+
+SESSIONS COLUMNS:
+  id (uuid)
+  user_id (uuid)
+  token (text)
+  expires_at (timestamp with time zone)
+  created_at (timestamp with time zone)
+  updated_at (timestamp with time zone)
+
+USERS DATA:
+  admin@lms.dev | role=ADMIN | verified=true
+  teacher@lms.dev | role=TEACHER | verified=true
+  student@lms.dev | role=STUDENT | verified=true
+
+ACCOUNTS DATA:
+  admin@lms.dev | provider=credential | pw_len=161
+  teacher@lms.dev | provider=credential | pw_len=161
+  student@lms.dev | provider=credential | pw_len=161

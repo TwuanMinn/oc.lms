@@ -2,8 +2,9 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
-import { useSession } from "@/lib/auth-client";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { Navbar } from "@/components/layout/Navbar";
+import { Breadcrumbs } from "@/components/shared/Breadcrumbs";
 import { RatingStars } from "@/components/course/RatingStars";
 import { ReviewSection } from "@/components/course/ReviewSection";
 import { formatDuration, formatDate } from "@/lib/utils";
@@ -15,10 +16,48 @@ import { useState } from "react";
 import { AnimatedPage, ScrollReveal } from "@/components/ui/animated";
 import { springBounce, collapseVariants, staggerContainer, fadeInUp } from "@/lib/motion";
 
+function CourseDetailSkeleton() {
+  return (
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="border-b border-border/40 bg-card/50">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="h-5 w-24 animate-shimmer rounded" />
+              <div className="h-10 w-3/4 animate-shimmer rounded" />
+              <div className="h-4 w-full animate-shimmer rounded" />
+              <div className="h-4 w-2/3 animate-shimmer rounded" />
+              <div className="flex gap-4 mt-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-5 w-20 animate-shimmer rounded" />
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col items-center lg:items-end">
+              <div className="w-full max-w-xs rounded-xl border border-border/50 bg-card p-6 space-y-4">
+                <div className="aspect-video w-full animate-shimmer rounded-lg" />
+                <div className="h-8 w-16 animate-shimmer rounded" />
+                <div className="h-12 w-full animate-shimmer rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div className="h-6 w-32 animate-shimmer rounded mb-4" />
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="mb-3 h-14 w-full animate-shimmer rounded-xl" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function CourseDetailPage() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { isAuthenticated } = useAuth();
 
   const { data: course, isLoading } = trpc.course.bySlug.useQuery({
     slug: params.slug,
@@ -50,19 +89,7 @@ export default function CourseDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="flex items-center justify-center py-20">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          >
-            <Loader2 className="h-8 w-8 text-muted-foreground" />
-          </motion.div>
-        </div>
-      </div>
-    );
+    return <CourseDetailSkeleton />;
   }
 
   if (!course) {
@@ -87,7 +114,7 @@ export default function CourseDetailPage() {
   const isFree = !course.price || course.price === "0" || course.price === "0.00";
 
   function handleEnroll() {
-    if (!session?.user) {
+    if (!isAuthenticated) {
       router.push(`/login?callbackUrl=/courses/${params.slug}`);
       return;
     }
@@ -106,6 +133,16 @@ export default function CourseDetailPage() {
       <Navbar />
 
       <AnimatedPage>
+        {/* Breadcrumbs */}
+        <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6">
+          <Breadcrumbs
+            items={[
+              { label: "Courses", href: "/courses" },
+              { label: course.title },
+            ]}
+          />
+        </div>
+
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0 }}
