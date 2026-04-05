@@ -143,15 +143,20 @@ export default function CourseDetailPage() {
           />
         </div>
 
-        {/* Hero */}
+        {/* ─── Immersive Hero ─── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="border-b border-border/40 bg-card/50"
+          className="relative border-b border-border/40 overflow-hidden"
         >
+          {/* Background glow derived from category */}
+          <div className="absolute inset-0 -z-10 bg-linear-to-b from-primary/5 via-background to-background" />
+          <div className="absolute top-0 left-1/4 h-[300px] w-[500px] rounded-full bg-primary/5 blur-[120px]" />
+
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+              {/* Left column — course info */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -163,16 +168,16 @@ export default function CourseDetailPage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary"
+                    className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary"
                   >
                     {course.categoryName}
                   </motion.span>
                 )}
-                <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
                   {course.title}
                 </h1>
                 {course.description && (
-                  <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                  <p className="mt-5 text-base sm:text-lg leading-relaxed text-muted-foreground max-w-2xl">
                     {course.description}
                   </p>
                 )}
@@ -200,27 +205,28 @@ export default function CourseDetailPage() {
                   ))}
                 </motion.div>
 
+                {/* Instructor */}
                 <motion.div
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="mt-4 flex items-center gap-3"
+                  className="mt-6 flex items-center gap-3"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-xs font-bold overflow-hidden">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-xs font-bold overflow-hidden ring-2 ring-border/50">
                     {course.teacherAvatar ? (
                       <Image
                         src={course.teacherAvatar}
                         alt={course.teacherName ?? ""}
-                        width={36}
-                        height={36}
+                        width={44}
+                        height={44}
                         className="h-full w-full rounded-full object-cover"
                       />
                     ) : (
-                      course.teacherName?.[0]?.toUpperCase()
+                      <span className="text-sm">{course.teacherName?.[0]?.toUpperCase()}</span>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{course.teacherName}</p>
+                    <p className="text-sm font-semibold">{course.teacherName}</p>
                     {course.teacherBio && (
                       <p className="text-xs text-muted-foreground line-clamp-1">
                         {course.teacherBio}
@@ -230,48 +236,59 @@ export default function CourseDetailPage() {
                 </motion.div>
               </motion.div>
 
-              {/* Enrollment card */}
+              {/* Right column — Sticky enrollment card */}
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
-                className="flex flex-col items-center lg:items-end"
+                className="lg:sticky lg:top-28 self-start"
               >
                 <motion.div
                   whileHover={{
-                    boxShadow: "0 8px 32px rgba(225, 29, 72, 0.08)",
-                    borderColor: "rgba(225, 29, 72, 0.3)",
+                    boxShadow: "0 12px 40px rgba(0, 0, 0, 0.08)",
+                    borderColor: "rgba(225, 29, 72, 0.25)",
                   }}
                   transition={{ duration: 0.3 }}
-                  className="w-full max-w-xs rounded-xl border border-border/50 bg-card p-6"
+                  className="rounded-2xl border border-border/50 bg-card p-6 shadow-lg backdrop-blur-sm"
                 >
                   {course.thumbnail && (
-                    <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-lg">
+                    <div className="relative mb-5 aspect-video w-full overflow-hidden rounded-xl">
                       <Image
                         src={course.thumbnail}
                         alt={course.title}
                         fill
                         className="object-cover"
                       />
+                      {/* Play button overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-xl">
+                          <PlayCircle className="h-8 w-8 text-primary ml-0.5" />
+                        </div>
+                      </div>
                     </div>
                   )}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.5 }}
-                    className="text-2xl font-bold"
+                    className="text-3xl font-bold"
                   >
-                    {isFree ? "Free" : `$${course.price}`}
+                    {isFree ? (
+                      <span className="text-emerald-500">Free</span>
+                    ) : (
+                      `$${course.price}`
+                    )}
                   </motion.div>
+
                   {course.isEnrolled ? (
                     <motion.button
                       onClick={handleStartLearning}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       transition={springBounce}
-                      className="mt-4 w-full cursor-pointer rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                      className="mt-4 w-full cursor-pointer rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 shadow-lg shadow-primary/20"
                     >
-                      Continue Learning
+                      Continue Learning →
                     </motion.button>
                   ) : (
                     <motion.button
@@ -280,7 +297,7 @@ export default function CourseDetailPage() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       transition={springBounce}
-                      className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                      className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
                     >
                       {enroll.isPending && (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -288,7 +305,23 @@ export default function CourseDetailPage() {
                       {isFree ? "Enroll for free" : `Enroll — $${course.price}`}
                     </motion.button>
                   )}
-                  <p className="mt-3 text-center text-[10px] text-muted-foreground">
+
+                  {/* Course includes */}
+                  <div className="mt-5 space-y-2.5 border-t border-border/40 pt-5">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">This course includes</p>
+                    {[
+                      { icon: BookOpen, text: `${totalLessons} lessons` },
+                      { icon: Clock, text: formatDuration(course.totalDuration) },
+                      { icon: Users, text: `${course.enrollmentCount} students enrolled` },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                        <item.icon className="h-4 w-4 text-primary/60" />
+                        <span>{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-4 text-center text-[10px] text-muted-foreground">
                     Updated {formatDate(course.createdAt)}
                   </p>
                 </motion.div>

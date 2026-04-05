@@ -211,16 +211,71 @@ export default function CoursesPage() {
 
           {/* Main content */}
           <main className="min-w-0 flex-1">
-            <ScrollReveal>
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">
-                  Course catalog
+            {/* ─── Hero Header ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="relative mb-8 overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 via-background to-primary/10 p-6 sm:p-8"
+            >
+              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-[80px]" />
+              <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-sky-500/5 blur-[60px]" />
+
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-2">
+                  <motion.span
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-xl"
+                  >
+                    📚
+                  </motion.span>
+                  <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                    Explore & Learn
+                  </p>
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Course Catalog
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Discover courses and start learning
+                <p className="mt-2 text-sm text-muted-foreground max-w-lg">
+                  Discover {data?.total ?? "..."} courses from expert instructors. Filter by category, search by topic, or browse what&apos;s trending.
                 </p>
+
+                {/* Category chips */}
+                {categories && categories.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="mt-4 flex flex-wrap gap-2"
+                  >
+                    <button
+                      onClick={() => { setCategory(""); setPage(0); }}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                        !category
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
+                      }`}
+                    >
+                      All
+                    </button>
+                    {categories.map((cat: { id: string; name: string }) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => { setCategory(cat.id); setPage(0); }}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                          category === cat.id
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground"
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
               </div>
-            </ScrollReveal>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 12 }}
