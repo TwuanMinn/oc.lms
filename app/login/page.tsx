@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -44,14 +44,21 @@ const PASSWORD_RULES = [
    FLOATING PARTICLES
    ================================================================ */
 function FloatingParticles() {
-  const particles = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 2,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 6 + 8,
-    delay: Math.random() * 4,
-  }));
+  // Deterministic values to avoid hydration mismatch (no Math.random during render)
+  const particles = [
+    { id: 0, size: 3, x: 12, y: 18, duration: 10, delay: 0.5, drift: 15 },
+    { id: 1, size: 5, x: 35, y: 45, duration: 12, delay: 1.2, drift: -15 },
+    { id: 2, size: 2, x: 68, y: 22, duration: 9, delay: 2.0, drift: 15 },
+    { id: 3, size: 4, x: 82, y: 70, duration: 14, delay: 0.8, drift: -15 },
+    { id: 4, size: 3, x: 25, y: 85, duration: 11, delay: 3.0, drift: 15 },
+    { id: 5, size: 6, x: 55, y: 10, duration: 13, delay: 1.5, drift: -15 },
+    { id: 6, size: 2, x: 90, y: 40, duration: 8, delay: 2.5, drift: 15 },
+    { id: 7, size: 4, x: 15, y: 60, duration: 10, delay: 3.5, drift: -15 },
+    { id: 8, size: 3, x: 45, y: 90, duration: 12, delay: 0.3, drift: 15 },
+    { id: 9, size: 5, x: 72, y: 55, duration: 9, delay: 1.8, drift: -15 },
+    { id: 10, size: 2, x: 50, y: 30, duration: 11, delay: 2.8, drift: 15 },
+    { id: 11, size: 4, x: 8, y: 75, duration: 13, delay: 3.2, drift: -15 },
+  ];
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -62,7 +69,7 @@ function FloatingParticles() {
           animate={{
             opacity: [0, 0.6, 0],
             y: [0, -40, -80],
-            x: [0, Math.random() > 0.5 ? 15 : -15, 0],
+            x: [0, p.drift, 0],
           }}
           transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
           className="absolute rounded-full bg-white/30"
@@ -82,27 +89,33 @@ function SuccessAnimation({ message, onComplete }: { message: string; onComplete
     return () => clearTimeout(timer);
   }, [onComplete]);
 
+  // Deterministic confetti positions
+  const confetti = Array.from({ length: 20 }, (_, i) => ({
+    x: ((i * 37 + 13) % 300) - 150,
+    y: ((i * 53 + 7) % 300) - 150,
+    delay: 0.3 + (i * 0.02),
+    color: ["#29b6f6", "#ffd54f", "#ff80ab", "#b2ff59", "#4dd0e1", "#ff8a65"][i % 6],
+  }));
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-slate-900/80"
     >
-      {Array.from({ length: 20 }).map((_, i) => (
+      {confetti.map((c, i) => (
         <motion.div
           key={i}
           initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
           animate={{
             opacity: [1, 1, 0],
             scale: [0, 1, 0.5],
-            x: (Math.random() - 0.5) * 300,
-            y: (Math.random() - 0.5) * 300,
+            x: c.x,
+            y: c.y,
           }}
-          transition={{ duration: 1.2, delay: 0.3 + Math.random() * 0.3, ease: "easeOut" }}
+          transition={{ duration: 1.2, delay: c.delay, ease: "easeOut" }}
           className="absolute w-2 h-2 rounded-full"
-          style={{
-            backgroundColor: ["#29b6f6", "#ffd54f", "#ff80ab", "#b2ff59", "#4dd0e1", "#ff8a65"][i % 6],
-          }}
+          style={{ backgroundColor: c.color }}
         />
       ))}
       <motion.div
@@ -202,7 +215,9 @@ function useCapsLock() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      setCapsLock(e.getModifierState("CapsLock"));
+      if (typeof e.getModifierState === "function") {
+        setCapsLock(e.getModifierState("CapsLock"));
+      }
     };
     window.addEventListener("keydown", handler);
     window.addEventListener("keyup", handler);
@@ -218,16 +233,15 @@ function useCapsLock() {
 /* ================================================================
    INPUT WITH ICON
    ================================================================ */
-function IconInput({
-  icon: Icon,
-  showToggle,
-  showCapsWarning,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  icon: React.ElementType;
-  showToggle?: boolean;
-  showCapsWarning?: boolean;
-}) {
+
+const IconInput = React.forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    icon: React.ElementType;
+    showToggle?: boolean;
+    showCapsWarning?: boolean;
+  }
+>(function IconInput({ icon: Icon, showToggle, showCapsWarning, ...props }, ref) {
   const [visible, setVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const capsLock = useCapsLock();
@@ -245,6 +259,7 @@ function IconInput({
       </motion.div>
       <input
         {...props}
+        ref={ref}
         type={resolvedType}
         onFocus={(e) => { setIsFocused(true); props.onFocus?.(e); }}
         onBlur={(e) => { setIsFocused(false); props.onBlur?.(e); }}
@@ -276,7 +291,7 @@ function IconInput({
       )}
     </div>
   );
-}
+});
 
 /* ================================================================
    STAGGER WRAPPER
