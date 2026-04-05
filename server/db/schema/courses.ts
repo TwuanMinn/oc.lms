@@ -39,6 +39,8 @@ export const courses = pgTable(
       .notNull()
       .default("0"),
     status: courseStatusEnum("status").notNull().default("DRAFT"),
+    // Migration: ALTER TABLE courses ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT false;
+    approved: boolean("approved").notNull().default(false),
     teacherId: uuid("teacher_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

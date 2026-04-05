@@ -21,7 +21,7 @@ interface AuthState {
 }
 
 const roleDashboardMap: Record<UserRole, string> = {
-  ADMIN: "/dashboard/admin/analytics",
+  ADMIN: "/dashboard/admin",
   TEACHER: "/dashboard/teacher/courses",
   STUDENT: "/dashboard/student",
 };

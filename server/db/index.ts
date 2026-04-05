@@ -8,11 +8,12 @@ import * as learning from "./schema/learning";
 import * as quizzes from "./schema/quizzes";
 import * as social from "./schema/social";
 import * as billing from "./schema/billing";
+import * as platform from "./schema/platform";
 
 const client = postgres(env.DATABASE_URL, { prepare: false });
 
 export const db = drizzle(client, {
-  schema: { ...users, ...courses, ...learning, ...quizzes, ...social, ...billing },
+  schema: { ...users, ...courses, ...learning, ...quizzes, ...social, ...billing, ...platform },
 });
 
 export type DB = typeof db;
