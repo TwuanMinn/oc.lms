@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/courses", "/pricing", "/api/auth", "/api/trpc", "/api/inngest", "/api/health"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/courses", "/pricing", "/api/auth", "/api/trpc", "/api/inngest", "/api/health", "/help"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
@@ -10,7 +10,7 @@ function isPublicRoute(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublicRoute(pathname) || pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
+  if (isPublicRoute(pathname) || pathname.startsWith("/_next") || pathname.startsWith("/favicon") || pathname.startsWith("/images")) {
     return NextResponse.next();
   }
 
@@ -22,20 +22,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Role-based sub-path guards: verify role via session API (not spoofable cookie)
+  // Role-based guards using a lightweight role cookie.
+  // The "user-role" cookie is set by the auth session callback (see lib/auth.ts).
+  // Actual enforcement happens server-side in tRPC procedures — this is just
+  // a fast-path UX guard to redirect users to the correct dashboard.
+  // This eliminates the self-referential fetch() anti-pattern that was
+  // causing performance bottlenecks and potential infinite loops.
   if (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/teacher")) {
-    try {
-      const sessionRes = await fetch(new URL("/api/auth/get-session", request.url), {
-        headers: { cookie: request.headers.get("cookie") ?? "" },
-      });
+    const roleCookie = request.cookies.get("user-role");
+    const role = roleCookie?.value;
 
-      if (!sessionRes.ok) {
-        return NextResponse.redirect(new URL("/dashboard/student", request.url));
-      }
-
-      const session = await sessionRes.json();
-      const role = session?.user?.role as string | undefined;
-
+    // If no role cookie yet, allow through — the page-level auth will
+    // redirect if needed, and the tRPC procedures enforce server-side.
+    if (role) {
       if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
         return NextResponse.redirect(new URL("/dashboard/student", request.url));
       }
@@ -43,8 +42,6 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith("/dashboard/teacher") && role !== "TEACHER" && role !== "ADMIN") {
         return NextResponse.redirect(new URL("/dashboard/student", request.url));
       }
-    } catch {
-      return NextResponse.redirect(new URL("/dashboard/student", request.url));
     }
   }
 

@@ -435,6 +435,8 @@ export default function CoursesPage() {
                           totalDuration={course.totalDuration}
                           teacherName={course.teacherName}
                           categoryName={course.categoryName}
+                          avgRating={Number(course.avgRating ?? 0)}
+                          enrollmentCount={Number(course.enrollmentCount ?? 0)}
                         />
                       </StaggerItem>
                     ))}

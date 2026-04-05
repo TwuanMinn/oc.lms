@@ -170,6 +170,8 @@ export async function getCatalog(input: CourseListInput) {
         categoryName: categories.name,
         categorySlug: categories.slug,
         createdAt: courses.createdAt,
+        avgRating: sql<number>`coalesce((SELECT avg(rating) FROM reviews WHERE reviews.course_id = courses.id), 0)`,
+        enrollmentCount: sql<number>`(SELECT count(*) FROM enrollments WHERE enrollments.course_id = courses.id)`,
       })
       .from(courses)
       .leftJoin(users, eq(courses.teacherId, users.id))

@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc/client";
-import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import {
   CheckCircle2,
@@ -15,30 +14,32 @@ import {
   Brain,
 } from "lucide-react";
 import { springBounce } from "@/lib/motion";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-interface QuizBlockProps {
-  quizId: string;
+interface QuizPlayerProps {
+  lessonId: string;
 }
 
 type Answers = Record<string, string[]>;
 
-export function QuizBlock({ quizId }: QuizBlockProps) {
+export function QuizPlayer({ lessonId }: QuizPlayerProps) {
   const [started, setStarted] = useState(false);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
+  const [submitted, setSubmitted] = useState(false);
 
-  const { data: quiz, isLoading } = trpc.quiz.getQuiz.useQuery(
-    { quizId },
-    { enabled: started }
+  const { data: quizMeta } = trpc.quiz.getByLessonId.useQuery({ lessonId });
+
+  const {
+    data: quiz,
+    isLoading,
+  } = trpc.quiz.getQuiz.useQuery(
+    { quizId: quizMeta?.id ?? "" },
+    { enabled: !!quizMeta?.id && started }
   );
 
   const submitMut = trpc.quiz.submit.useMutation({
-    onSuccess: (data) => {
-      if (data.passed) toast.success(`Passed with ${data.score}%! 🎉`);
-      else toast.error(`Score: ${data.score}%. Keep trying!`);
-    },
-    onError: () => toast.error("Failed to submit quiz"),
+    onSuccess: () => setSubmitted(true),
   });
 
   const toggleOption = useCallback(
@@ -46,10 +47,10 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
       setAnswers((prev) => {
         const current = prev[questionId] ?? [];
         if (isMulti) {
-          const next = current.includes(optionId)
+          const newSel = current.includes(optionId)
             ? current.filter((o) => o !== optionId)
             : [...current, optionId];
-          return { ...prev, [questionId]: next };
+          return { ...prev, [questionId]: newSel };
         }
         return { ...prev, [questionId]: [optionId] };
       });
@@ -71,29 +72,28 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
   const handleRetry = () => {
     setAnswers({});
     setCurrentQ(0);
+    setSubmitted(false);
     submitMut.reset();
   };
 
-  const result = submitMut.data;
-  const feedback = result?.feedback;
-  const submitted = !!result;
+  if (!quizMeta) return null;
 
-  /* ─── Start Screen ─── */
+  // Start screen
   if (!started) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-8 rounded-xl border border-primary/20 bg-primary/5 p-6"
+        className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-6"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <Brain className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="font-bold">Lesson Quiz</h3>
+            <h3 className="font-bold">{quizMeta.title}</h3>
             <p className="text-xs text-muted-foreground">
-              Test your knowledge from this lesson
+              Passing score: {quizMeta.passingScore}%
             </p>
           </div>
         </div>
@@ -111,10 +111,9 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
     );
   }
 
-  /* ─── Loading ─── */
   if (isLoading || !quiz) {
     return (
-      <div className="mt-8 flex items-center justify-center gap-2 rounded-xl border border-border/50 p-8">
+      <div className="mt-6 flex items-center justify-center gap-2 p-8">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
         <span className="text-sm text-muted-foreground">Loading quiz...</span>
       </div>
@@ -124,28 +123,23 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
   const question = quiz.questions[currentQ];
   const totalQ = quiz.questions.length;
   const progress = ((currentQ + 1) / totalQ) * 100;
-  const allAnswered = quiz.questions.every(
-    (q) => (answers[q.id]?.length ?? 0) > 0
-  );
+  const allAnswered = quiz.questions.every((q) => (answers[q.id]?.length ?? 0) > 0);
+  const feedback = submitMut.data?.feedback;
+  const result = submitMut.data;
 
-  /* ─── Results Screen ─── */
+  // Results screen
   if (submitted && result) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mt-8 rounded-xl border border-border/50 bg-card p-6"
+        className="mt-6 rounded-xl border border-border/50 bg-card p-6"
       >
         <div className="text-center">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 15,
-              delay: 0.1,
-            }}
+            transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
             className={cn(
               "mx-auto flex h-16 w-16 items-center justify-center rounded-full",
               result.passed ? "bg-emerald-500/10" : "bg-rose-500/10"
@@ -204,13 +198,10 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
                   <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
                 )}
                 <div>
-                  <p className="font-medium">
-                    Q{i + 1}: {q.text}
-                  </p>
+                  <p className="font-medium">Q{i + 1}: {q.text}</p>
                   {!fb?.correct && (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Correct:{" "}
-                      {q.options
+                      Correct: {q.options
                         .filter((o) => fb?.correctOptions.includes(o.id))
                         .map((o) => o.text)
                         .join(", ")}
@@ -222,7 +213,7 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
           })}
         </div>
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex justify-center gap-3">
           <motion.button
             onClick={handleRetry}
             whileHover={{ scale: 1.03 }}
@@ -230,27 +221,24 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
             className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
           >
             <RotateCcw className="h-4 w-4" />
-            Retry Quiz
+            Retry
           </motion.button>
         </div>
       </motion.div>
     );
   }
 
-  /* ─── Question Screen ─── */
+  // Question screen
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 rounded-xl border border-border/50 bg-card"
+      className="mt-6 rounded-xl border border-border/50 bg-card"
     >
-      {/* Progress */}
+      {/* Progress bar */}
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Brain className="h-3.5 w-3.5 text-primary" />
-            Question {currentQ + 1} of {totalQ}
-          </span>
+          <span>Question {currentQ + 1} of {totalQ}</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -262,7 +250,7 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
         </div>
       </div>
 
-      {/* Question body */}
+      {/* Question */}
       <div className="p-4 pt-5">
         <AnimatePresence mode="wait">
           <motion.div
@@ -281,19 +269,11 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
 
             <div className="mt-4 space-y-2">
               {question.options.map((option) => {
-                const isSelected = (answers[question.id] ?? []).includes(
-                  option.id
-                );
+                const isSelected = (answers[question.id] ?? []).includes(option.id);
                 return (
                   <motion.button
                     key={option.id}
-                    onClick={() =>
-                      toggleOption(
-                        question.id,
-                        option.id,
-                        question.type === "MULTI"
-                      )
-                    }
+                    onClick={() => toggleOption(question.id, option.id, question.type === "MULTI")}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     className={cn(
@@ -329,7 +309,7 @@ export function QuizBlock({ quizId }: QuizBlockProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Nav buttons */}
+        {/* Navigation */}
         <div className="mt-6 flex items-center justify-between">
           <motion.button
             onClick={() => setCurrentQ((p) => Math.max(0, p - 1))}

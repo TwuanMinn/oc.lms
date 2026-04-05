@@ -27,4 +27,8 @@ export const enrollmentRouter = router({
   myEnrollments: protectedProcedure.query(async ({ ctx }) => {
     return enrollmentService.getEnrolledCourses(ctx.user.id);
   }),
+
+  recommended: protectedProcedure.query(async ({ ctx }) => {
+    return enrollmentService.getRecommendedCourses(ctx.user.id);
+  }),
 });

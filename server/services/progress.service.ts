@@ -1,9 +1,10 @@
 import "server-only";
-import { eq, and, asc, sql, count } from "drizzle-orm";
+import { eq, and, asc, count } from "drizzle-orm";
 import { db } from "@/server/db";
 import { progress } from "@/server/db/schema/learning";
 import { lessons, modules } from "@/server/db/schema/courses";
 import { enrollments } from "@/server/db/schema/learning";
+import { recordActivity, issueCertificate } from "./certificate.service";
 
 export async function markLessonComplete(
   userId: string,
@@ -16,7 +17,7 @@ export async function markLessonComplete(
       .from(progress)
       .where(and(eq(progress.userId, userId), eq(progress.lessonId, lessonId)));
 
-    if (existing) return { alreadyComplete: true };
+    if (existing) return { alreadyComplete: true, percent: 0 };
 
     await tx.insert(progress).values({ userId, courseId, lessonId });
 
@@ -28,6 +29,20 @@ export async function markLessonComplete(
         .where(
           and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
         );
+
+      // Auto-issue certificate on course completion
+      try {
+        await issueCertificate(userId, courseId);
+      } catch {
+        // Certificate may already exist — ignore conflict
+      }
+    }
+
+    // Record daily streak activity
+    try {
+      await recordActivity(userId);
+    } catch {
+      // Non-critical — don't block lesson completion
     }
 
     return { alreadyComplete: false, percent };

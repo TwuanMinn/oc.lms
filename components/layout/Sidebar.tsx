@@ -55,6 +55,7 @@ const studentSections: NavSection[] = [
       { label: "Certificates", href: "/dashboard/student/certificates", icon: Award },
       { label: "Calendar", href: "/dashboard/student/calendar", icon: CalendarDays },
       { label: "Notifications", href: "/dashboard/student/notifications", icon: Bell, badge: 3 },
+      { label: "Settings", href: "/dashboard/student/settings", icon: Settings },
     ],
   },
 ];

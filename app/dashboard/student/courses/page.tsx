@@ -87,13 +87,13 @@ export default function StudentCoursesPage() {
                               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                                 <motion.div
                                   initial={{ width: 0 }}
-                                  animate={{ width: `${(e as Record<string, unknown>).progressPercent ?? 0}%` }}
+                                  animate={{ width: `${(e as unknown as { progressPercent?: number }).progressPercent ?? 0}%` }}
                                   transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
                                   className="h-full rounded-full bg-primary"
                                 />
                               </div>
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                {(e as Record<string, unknown>).progressPercent ?? 0}%
+                                {(e as unknown as { progressPercent?: number }).progressPercent ?? 0}%
                               </span>
                             </div>
                           )}

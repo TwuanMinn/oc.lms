@@ -7,7 +7,7 @@ import { ProgressRing } from "./ProgressRing";
 import { RatingStars } from "./RatingStars";
 import { CategoryBadge } from "./CategoryBadge";
 import { motion } from "motion/react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Users } from "lucide-react";
 
 interface CourseCardProps {
   id: string;
@@ -21,6 +21,7 @@ interface CourseCardProps {
   categoryName?: string | null;
   categorySlug?: string | null;
   avgRating?: number;
+  enrollmentCount?: number;
   progressPercent?: number;
   showProgress?: boolean;
 }
@@ -35,6 +36,7 @@ export function CourseCard({
   teacherName,
   categoryName,
   avgRating,
+  enrollmentCount,
   progressPercent,
   showProgress = false,
 }: CourseCardProps) {
@@ -59,7 +61,7 @@ export function CourseCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+            <div className="flex h-full flex-col items-center justify-center gap-2 bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
               <BookOpen className="h-8 w-8 text-primary/25" />
               <span className="text-lg font-bold text-primary/30">
                 {title.slice(0, 2).toUpperCase()}
@@ -99,6 +101,12 @@ export function CourseCard({
               )}
             </div>
             <div className="flex items-center gap-2">
+              {enrollmentCount !== undefined && enrollmentCount > 0 && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Users className="h-3 w-3" />
+                  {enrollmentCount}
+                </span>
+              )}
               {avgRating !== undefined && avgRating > 0 && (
                 <RatingStars rating={avgRating} size="sm" />
               )}

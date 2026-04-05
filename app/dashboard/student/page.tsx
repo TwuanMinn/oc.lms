@@ -6,14 +6,69 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
-import { BookOpen, PlayCircle, Clock, CheckCircle2, Award } from "lucide-react";
+import { BookOpen, PlayCircle, Clock, CheckCircle2, Award, Flame, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { AnimatedPage, StaggerGrid, StaggerItem, AnimatedShimmerButton } from "@/components/ui/animated";
 import { springBounce } from "@/lib/motion";
 import { formatDate } from "@/lib/utils";
+
+function StreakWidget({ streak, activityDays }: { streak: number; activityDays: { date: string; count: number }[] }) {
+  const last14 = [];
+  const today = new Date();
+  const activeDates = new Map(activityDays.map((d) => [d.date, d.count]));
+
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    last14.push({ date: dateStr, count: activeDates.get(dateStr) ?? 0, day: d.toLocaleDateString("en", { weekday: "narrow" }) });
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="rounded-2xl border border-border/50 bg-card p-5 shadow-sm"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10">
+            <Flame className="h-5 w-5 text-orange-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold tracking-tight">{streak}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Day Streak</p>
+          </div>
+        </div>
+        {streak > 0 && (
+          <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-bold text-orange-500">
+            🔥 On fire!
+          </span>
+        )}
+      </div>
+      <div className="flex gap-1">
+        {last14.map((d, i) => (
+          <div key={i} className="flex flex-1 flex-col items-center gap-1">
+            <div
+              className={`h-6 w-full rounded-sm transition-colors ${
+                d.count > 2
+                  ? "bg-primary"
+                  : d.count > 0
+                    ? "bg-primary/40"
+                    : "bg-muted/40"
+              }`}
+              title={`${d.date}: ${d.count} lesson${d.count !== 1 ? "s" : ""}`}
+            />
+            <span className="text-[8px] text-muted-foreground">{d.day}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function StudentDashboard() {
   const { user, role } = useAuth();
@@ -24,6 +79,10 @@ export default function StudentDashboard() {
     isError,
     refetch,
   } = trpc.enrollment.myEnrollments.useQuery();
+
+  const { data: streakData } = trpc.certificate.streakData.useQuery();
+  const { data: certCount } = trpc.certificate.count.useQuery();
+  const { data: recommended } = trpc.enrollment.recommended.useQuery();
 
   const activeCourses = enrolledCourses?.filter((e) => !e.completedAt) ?? [];
   const completedCourses = enrolledCourses?.filter((e) => e.completedAt) ?? [];
@@ -43,7 +102,6 @@ export default function StudentDashboard() {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 via-background to-primary/10 p-6 sm:p-8"
             >
-              {/* Background glow */}
               <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-[80px]" />
               <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-rose-500/5 blur-[60px]" />
 
@@ -85,29 +143,38 @@ export default function StudentDashboard() {
               </div>
             </motion.div>
 
-            {/* Dashboard Overview Metrics */}
-            <StaggerGrid className="mt-6 mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {[
-                { label: "Active Courses", value: activeCourses.length.toString(), icon: BookOpen, color: "bg-sky-500/10 text-sky-500" },
-                { label: "Completed", value: completedCourses.length.toString(), icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-500" },
-                { label: "Certificates", value: "0", icon: Award, color: "bg-amber-500/10 text-amber-500" }
-              ].map((stat, i) => (
-                <StaggerItem key={i} scale>
-                  <motion.div
-                    whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
-                    className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-all"
-                  >
-                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${stat.color}`}>
-                      <stat.icon className="h-7 w-7" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </motion.div>
-                </StaggerItem>
-              ))}
-            </StaggerGrid>
+            {/* ─── Metrics + Streak Row ─── */}
+            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
+              {/* Stats */}
+              <StaggerGrid className="col-span-1 lg:col-span-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {[
+                  { label: "Active Courses", value: activeCourses.length.toString(), icon: BookOpen, color: "bg-sky-500/10 text-sky-500" },
+                  { label: "Completed", value: completedCourses.length.toString(), icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-500" },
+                  { label: "Certificates", value: (certCount ?? 0).toString(), icon: Award, color: "bg-amber-500/10 text-amber-500" },
+                ].map((stat, i) => (
+                  <StaggerItem key={i} scale>
+                    <motion.div
+                      whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
+                      className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-all"
+                    >
+                      <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${stat.color}`}>
+                        <stat.icon className="h-7 w-7" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                      </div>
+                    </motion.div>
+                  </StaggerItem>
+                ))}
+              </StaggerGrid>
+
+              {/* Streak Widget */}
+              <StreakWidget
+                streak={streakData?.currentStreak ?? 0}
+                activityDays={streakData?.recentActivity ?? []}
+              />
+            </div>
 
             {/* Continue where you left off */}
             {lastActive && (
@@ -121,13 +188,12 @@ export default function StudentDashboard() {
                   href={`/courses/${lastActive.courseSlug ?? lastActive.courseId}`}
                   className="group relative flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-primary/20 bg-background p-6 transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
                 >
-                  {/* Subtle moving gradient background */}
-                  <motion.div 
-                     animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                     className="absolute inset-0 -z-10 bg-[linear-gradient(270deg,rgba(225,29,72,0.02),rgba(225,29,72,0.08),rgba(225,29,72,0.02))] bg-[length:200%_200%]" 
+                  <motion.div
+                    animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 -z-10 bg-[linear-gradient(270deg,rgba(225,29,72,0.02),rgba(225,29,72,0.08),rgba(225,29,72,0.02))] bg-[length:200%_200%]"
                   />
-                  
+
                   <div className="flex items-center gap-5">
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
@@ -144,7 +210,7 @@ export default function StudentDashboard() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <motion.span
                       animate={{ x: [0, 4, 0] }}
@@ -157,6 +223,7 @@ export default function StudentDashboard() {
               </motion.div>
             )}
 
+            {/* ─── Enrolled Courses ─── */}
             <div className="mt-8">
               <motion.h2
                 initial={{ opacity: 0, x: -12 }}
@@ -224,13 +291,13 @@ export default function StudentDashboard() {
                               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                                 <motion.div
                                   initial={{ width: 0 }}
-                                  animate={{ width: `${(e as Record<string, unknown>).progressPercent ?? 0}%` }}
+                                  animate={{ width: `${e.progressPercent ?? 0}%` }}
                                   transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
                                   className="h-full rounded-full bg-primary"
                                 />
                               </div>
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                {(e as Record<string, unknown>).progressPercent ?? 0}%
+                                {e.progressPercent ?? 0}%
                               </span>
                             </div>
                           )}
@@ -263,6 +330,52 @@ export default function StudentDashboard() {
                 </motion.div>
               )}
             </div>
+
+            {/* ─── Recommended Courses ─── */}
+            {recommended && recommended.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-10"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Recommended for you
+                  </h2>
+                  <Link href="/courses" className="text-sm font-medium text-primary flex items-center gap-1 hover:text-primary/80">
+                    View all <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+                <StaggerGrid className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {recommended.slice(0, 3).map((course) => (
+                    <StaggerItem key={course.id} scale>
+                      <Link href={`/courses/${course.slug}`}>
+                        <motion.div
+                          whileHover={{ y: -4, borderColor: "rgba(225, 29, 72, 0.3)" }}
+                          transition={springBounce}
+                          className="group rounded-xl border border-border/50 bg-card p-5 transition-all hover:shadow-md"
+                        >
+                          <p className="text-sm font-bold group-hover:text-primary transition-colors truncate">
+                            {course.title}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                            {course.description}
+                          </p>
+                          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{course.enrollmentCount} students</span>
+                            <span className="font-semibold text-foreground">
+                              {!course.price || course.price === "0" || course.price === "0.00" ? "Free" : `$${course.price}`}
+                            </span>
+                          </div>
+                        </motion.div>
+                      </Link>
+                    </StaggerItem>
+                  ))}
+                </StaggerGrid>
+              </motion.div>
+            )}
           </AnimatedPage>
         </main>
       </div>

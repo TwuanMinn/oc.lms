@@ -17,25 +17,38 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { AnimatedPage, StaggerGrid, StaggerItem, AnimatedShimmerButton } from "@/components/ui/animated";
+import { AnimatedPage, StaggerGrid, StaggerItem } from "@/components/ui/animated";
 import { springBounce } from "@/lib/motion";
+
+interface TeacherCourse {
+  id: string;
+  slug: string;
+  title: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  thumbnail: string | null;
+  createdAt: Date;
+  enrollmentCount: number;
+}
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
   const { data: courses, isLoading } = trpc.course.myCoursesAsTeacher.useQuery();
 
-  const totalCourses = courses?.length ?? 0;
-  const publishedCourses = courses?.filter((c: any) => c.status === "PUBLISHED").length ?? 0;
-  const draftCourses = courses?.filter((c: any) => c.status === "DRAFT").length ?? 0;
-  const totalStudents = courses?.reduce((sum: number, c: any) => sum + (c.enrollmentCount ?? 0), 0) ?? 0;
-  const topCourse = courses?.reduce((best: any, c: any) =>
-    (!best || (c.enrollmentCount ?? 0) > (best.enrollmentCount ?? 0)) ? c : best, null as any);
+  const typedCourses = (courses ?? []) as TeacherCourse[];
+  const totalCourses = typedCourses.length;
+  const publishedCourses = typedCourses.filter((c) => c.status === "PUBLISHED").length;
+  const draftCourses = typedCourses.filter((c) => c.status === "DRAFT").length;
+  const totalStudents = typedCourses.reduce((sum, c) => sum + (c.enrollmentCount ?? 0), 0);
+  const topCourse = typedCourses.reduce<TeacherCourse | null>(
+    (best, c) => (!best || (c.enrollmentCount ?? 0) > (best.enrollmentCount ?? 0)) ? c : best,
+    null
+  );
 
   const stats = [
-    { label: "Total Courses", value: totalCourses, icon: BookOpen, color: "bg-sky-500/10 text-sky-500", accent: "sky" },
-    { label: "Published", value: publishedCourses, icon: TrendingUp, color: "bg-emerald-500/10 text-emerald-500", accent: "emerald" },
-    { label: "Drafts", value: draftCourses, icon: BarChart3, color: "bg-amber-500/10 text-amber-500", accent: "amber" },
-    { label: "Total Students", value: totalStudents, icon: Users, color: "bg-rose-500/10 text-rose-500", accent: "rose" },
+    { label: "Total Courses", value: totalCourses, icon: BookOpen, color: "bg-sky-500/10 text-sky-500" },
+    { label: "Published", value: publishedCourses, icon: TrendingUp, color: "bg-emerald-500/10 text-emerald-500" },
+    { label: "Drafts", value: draftCourses, icon: BarChart3, color: "bg-amber-500/10 text-amber-500" },
+    { label: "Total Students", value: totalStudents, icon: Users, color: "bg-rose-500/10 text-rose-500" },
   ];
 
   return (

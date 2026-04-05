@@ -240,7 +240,7 @@ export default function PricingPage() {
                     a: "Yes! We offer a 50% discount for students. Please contact our support team with a valid .edu email address.",
                   }
                 ].map((faq, i) => (
-                  <StaggerItem key={faq.q} delay={i * 0.1}>
+                  <StaggerItem key={faq.q}>
                     <div className="group rounded-2xl border border-border/50 bg-card/40 p-6 backdrop-blur-sm transition-all hover:border-primary/30 hover:bg-card hover:shadow-lg hover:shadow-primary/5 cursor-default">
                       <h4 className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{faq.q}</h4>
                       <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
