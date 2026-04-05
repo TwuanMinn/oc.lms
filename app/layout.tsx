@@ -34,6 +34,16 @@ export default function RootLayout({
               position="bottom-right"
               richColors
               closeButton
+              toastOptions={{
+                style: {
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  backdropFilter: "blur(12px)",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                },
+                className: "shadow-xl",
+              }}
             />
           </TRPCProvider>
         </ThemeProvider>

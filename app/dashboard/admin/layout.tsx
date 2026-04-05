@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
-
-export const metadata: Metadata = {
-  title: "Admin Dashboard | Green Academy",
-  description: "Platform administration and management dashboard.",
-};
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export default function AdminLayout({
   children,
@@ -17,7 +14,9 @@ export default function AdminLayout({
       <Navbar />
       <div className="flex">
         <Sidebar role="ADMIN" />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-6">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </div>
   );

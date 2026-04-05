@@ -36,28 +36,75 @@ export default function StudentDashboard() {
         <Sidebar role={role} />
         <main className="flex-1 p-6">
           <AnimatedPage>
-            <PageHeader
-              title={`Welcome back, ${user?.name ?? "Student"}`}
-              description="Continue learning where you left off"
-            />
+            {/* ─── Welcome Hero Banner ─── */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 via-background to-primary/10 p-6 sm:p-8"
+            >
+              {/* Background glow */}
+              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-[80px]" />
+              <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-rose-500/5 blur-[60px]" />
+
+              <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <motion.span
+                      animate={{ rotate: [0, 15, -15, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="text-2xl"
+                    >
+                      👋
+                    </motion.span>
+                    <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                      Welcome back
+                    </p>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                    {user?.name ?? "Student"}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground max-w-md">
+                    &ldquo;The beautiful thing about learning is that no one can take it away from you.&rdquo;
+                    <span className="ml-1 text-xs text-muted-foreground/60">— B.B. King</span>
+                  </p>
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Link
+                    href="/courses"
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Explore courses
+                  </Link>
+                </motion.div>
+              </div>
+            </motion.div>
 
             {/* Dashboard Overview Metrics */}
             <StaggerGrid className="mt-6 mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
-                { label: "Active Courses", value: activeCourses.length.toString(), icon: BookOpen },
-                { label: "Completed", value: completedCourses.length.toString(), icon: CheckCircle2 },
-                { label: "Certificates", value: "0", icon: Award }
+                { label: "Active Courses", value: activeCourses.length.toString(), icon: BookOpen, color: "bg-sky-500/10 text-sky-500" },
+                { label: "Completed", value: completedCourses.length.toString(), icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-500" },
+                { label: "Certificates", value: "0", icon: Award, color: "bg-amber-500/10 text-amber-500" }
               ].map((stat, i) => (
                 <StaggerItem key={i} scale>
-                  <div className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-border">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                      <stat.icon className="h-7 w-7 text-primary" />
+                  <motion.div
+                    whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.06)" }}
+                    className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-all"
+                  >
+                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${stat.color}`}>
+                      <stat.icon className="h-7 w-7" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 </StaggerItem>
               ))}
             </StaggerGrid>
