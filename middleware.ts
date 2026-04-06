@@ -7,10 +7,52 @@ function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
 }
 
+// ── S3: Simple in-memory rate limiter for auth endpoints ──
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 20; // 20 requests per minute for auth
+
+function isRateLimited(key: string, maxRequests: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  entry.count++;
+  if (entry.count > maxRequests) {
+    return true;
+  }
+  return false;
+}
+
+// Periodically clean up expired entries (avoid memory leak)
+if (typeof globalThis !== "undefined") {
+  const CLEANUP_INTERVAL = 5 * 60_000;
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitStore) {
+      if (now > entry.resetAt) rateLimitStore.delete(key);
+    }
+  }, CLEANUP_INTERVAL).unref?.();
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicRoute(pathname) || pathname.startsWith("/_next") || pathname.startsWith("/favicon") || pathname.startsWith("/images")) {
+    // Rate limit auth endpoints even though they're "public"
+    if (pathname.startsWith("/api/auth")) {
+      const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+      if (isRateLimited(`auth:${ip}`, RATE_LIMIT_MAX_REQUESTS)) {
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later." },
+          { status: 429 }
+        );
+      }
+    }
     return NextResponse.next();
   }
 
@@ -22,18 +64,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Rate limit API routes for authenticated users
+  if (pathname.startsWith("/api/trpc")) {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    if (isRateLimited(`api:${ip}`, 100)) { // 100 req/min for API
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down." },
+        { status: 429 }
+      );
+    }
+  }
+
   // Role-based guards using a lightweight role cookie.
   // The "user-role" cookie is set by the auth session callback (see lib/auth.ts).
   // Actual enforcement happens server-side in tRPC procedures — this is just
   // a fast-path UX guard to redirect users to the correct dashboard.
-  // This eliminates the self-referential fetch() anti-pattern that was
-  // causing performance bottlenecks and potential infinite loops.
   if (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/teacher")) {
     const roleCookie = request.cookies.get("user-role");
     const role = roleCookie?.value;
 
-    // If no role cookie yet, allow through — the page-level auth will
-    // redirect if needed, and the tRPC procedures enforce server-side.
     if (role) {
       if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
         return NextResponse.redirect(new URL("/dashboard/student", request.url));

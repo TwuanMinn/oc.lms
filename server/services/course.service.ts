@@ -55,13 +55,10 @@ export async function updateCourse(
   }
 
   const { id, ...data } = input;
-  const updateData: Record<string, unknown> = {};
-  if (data.title !== undefined) updateData.title = data.title;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
-  if (data.thumbnail !== undefined) updateData.thumbnail = data.thumbnail;
-  if (data.price !== undefined) updateData.price = data.price;
-  if (data.status !== undefined) updateData.status = data.status;
+  // #8: Auto-filter undefined fields — no manual if-chains to maintain
+  const updateData = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  );
 
   const [updated] = await db
     .update(courses)

@@ -1,13 +1,9 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
-import { router, protectedProcedure } from "@/server/trpc";
-import { db } from "@/server/db";
-import { reviews } from "@/server/db/schema/social";
-import { users } from "@/server/db/schema/users";
-import { courses } from "@/server/db/schema/courses";
-import { TRPCError } from "@trpc/server";
+import { router, protectedProcedure, publicProcedure } from "@/server/trpc";
+import * as reviewService from "@/server/services/review.service";
 import * as notificationService from "@/server/services/notification.service";
 
+// #1/#9: Fully delegated to review.service — no inline DB logic
 export const reviewRouter = router({
   create: protectedProcedure
     .input(
@@ -18,41 +14,10 @@ export const reviewRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const [existing] = await db
-        .select({ id: reviews.id })
-        .from(reviews)
-        .where(
-          and(
-            eq(reviews.userId, ctx.user.id),
-            eq(reviews.courseId, input.courseId)
-          )
-        );
-
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "You already reviewed this course",
-        });
-      }
-
-      const [review] = await db
-        .insert(reviews)
-        .values({
-          userId: ctx.user.id,
-          courseId: input.courseId,
-          rating: input.rating,
-          body: input.body,
-        })
-        .returning({
-          id: reviews.id,
-          rating: reviews.rating,
-        });
-
-      // Notify the course teacher about the new review
-      const [course] = await db
-        .select({ teacherId: courses.teacherId, title: courses.title })
-        .from(courses)
-        .where(eq(courses.id, input.courseId));
+      const { review, course } = await reviewService.createReview(
+        ctx.user.id,
+        input
+      );
 
       if (course && course.teacherId !== ctx.user.id) {
         await notificationService.createNotification(
@@ -76,29 +41,10 @@ export const reviewRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const [existing] = await db
-        .select({ userId: reviews.userId })
-        .from(reviews)
-        .where(eq(reviews.id, input.id));
-
-      if (!existing || existing.userId !== ctx.user.id) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "Not your review" });
-      }
-
-      const updateData: Record<string, unknown> = {};
-      if (input.rating !== undefined) updateData.rating = input.rating;
-      if (input.body !== undefined) updateData.body = input.body;
-
-      const [updated] = await db
-        .update(reviews)
-        .set(updateData)
-        .where(eq(reviews.id, input.id))
-        .returning({ id: reviews.id, rating: reviews.rating });
-
-      return updated;
+      return reviewService.updateReview(ctx.user.id, input);
     }),
 
-  getByCourse: protectedProcedure
+  getByCourse: publicProcedure
     .input(
       z.object({
         courseId: z.string().uuid(),
@@ -107,22 +53,6 @@ export const reviewRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const courseReviews = await db
-        .select({
-          id: reviews.id,
-          rating: reviews.rating,
-          body: reviews.body,
-          createdAt: reviews.createdAt,
-          userName: users.name,
-          userAvatar: users.avatar,
-        })
-        .from(reviews)
-        .innerJoin(users, eq(reviews.userId, users.id))
-        .where(eq(reviews.courseId, input.courseId))
-        .orderBy(desc(reviews.createdAt))
-        .limit(input.limit)
-        .offset(input.offset);
-
-      return courseReviews;
+      return reviewService.getReviewsByCourse(input);
     }),
 });

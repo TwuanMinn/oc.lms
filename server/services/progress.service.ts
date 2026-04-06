@@ -6,6 +6,9 @@ import { lessons, modules } from "@/server/db/schema/courses";
 import { enrollments } from "@/server/db/schema/learning";
 import { recordActivity, issueCertificate } from "./certificate.service";
 
+// #14: Accept dbOrTx to enable transaction-safe progress reads
+type QueryRunner = Pick<typeof db, "select">;
+
 export async function markLessonComplete(
   userId: string,
   courseId: string,
@@ -21,7 +24,8 @@ export async function markLessonComplete(
 
     await tx.insert(progress).values({ userId, courseId, lessonId });
 
-    const percent = await getCourseProgressPercent(userId, courseId);
+    // #14: Use tx instead of db for transaction-consistent reads
+    const percent = await getCourseProgressPercent(userId, courseId, tx);
     if (percent === 100) {
       await tx
         .update(enrollments)
@@ -51,16 +55,17 @@ export async function markLessonComplete(
 
 export async function getCourseProgressPercent(
   userId: string,
-  courseId: string
+  courseId: string,
+  runner: QueryRunner = db
 ): Promise<number> {
   const [completedResult, totalResult] = await Promise.all([
-    db
+    runner
       .select({ count: count() })
       .from(progress)
       .where(
         and(eq(progress.userId, userId), eq(progress.courseId, courseId))
       ),
-    db
+    runner
       .select({ count: count() })
       .from(lessons)
       .where(eq(lessons.courseId, courseId)),

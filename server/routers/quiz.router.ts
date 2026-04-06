@@ -2,9 +2,8 @@ import { z } from "zod";
 import { router, protectedProcedure, teacherProcedure } from "@/server/trpc";
 import { createQuizSchema, createQuestionSchema, submitQuizSchema } from "@/lib/validations/quiz";
 import * as quizService from "@/server/services/quiz.service";
-import { db } from "@/server/db";
-import { quizzes, questions } from "@/server/db/schema/quizzes";
 
+// #11: create/addQuestion now pass ctx.user for ownership verification
 export const quizRouter = router({
   getQuiz: protectedProcedure
     .input(z.object({ quizId: z.string().uuid() }))
@@ -26,21 +25,13 @@ export const quizRouter = router({
 
   create: teacherProcedure
     .input(createQuizSchema)
-    .mutation(async ({ input }) => {
-      const [quiz] = await db
-        .insert(quizzes)
-        .values(input)
-        .returning({ id: quizzes.id, title: quizzes.title });
-      return quiz;
+    .mutation(async ({ input, ctx }) => {
+      return quizService.createQuiz(input, ctx.user.id, ctx.user.role);
     }),
 
   addQuestion: teacherProcedure
     .input(createQuestionSchema)
-    .mutation(async ({ input }) => {
-      const [question] = await db
-        .insert(questions)
-        .values(input)
-        .returning({ id: questions.id, text: questions.text });
-      return question;
+    .mutation(async ({ input, ctx }) => {
+      return quizService.addQuestion(input, ctx.user.id, ctx.user.role);
     }),
 });

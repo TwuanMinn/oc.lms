@@ -10,6 +10,9 @@ import {
 
 export const roleEnum = pgEnum("user_role", ["ADMIN", "TEACHER", "STUDENT"]);
 
+// #18: Typed enum instead of raw text — prevents invalid status strings
+export const userStatusEnum = pgEnum("user_status", ["active", "banned", "suspended"]);
+
 export const users = pgTable(
   "users",
   {
@@ -21,8 +24,7 @@ export const users = pgTable(
     avatar: text("avatar"),
     bio: text("bio"),
     emailVerified: boolean("email_verified").notNull().default(false),
-    // Migration: ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
-    status: text("status").notNull().default("active"),
+    status: userStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

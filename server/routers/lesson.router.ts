@@ -31,49 +31,49 @@ export const lessonRouter = router({
 
   create: teacherProcedure
     .input(createLessonSchema)
-    .mutation(async ({ input }) => {
-      return lessonService.createLesson(input);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.createLesson(input, ctx.user.id, ctx.user.role);
     }),
 
   update: teacherProcedure
     .input(updateLessonSchema)
-    .mutation(async ({ input }) => {
-      return lessonService.updateLesson(input);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.updateLesson(input, ctx.user.id, ctx.user.role);
     }),
 
   delete: teacherProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      return lessonService.deleteLesson(input.id);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.deleteLesson(input.id, ctx.user.id, ctx.user.role);
     }),
 
   reorder: teacherProcedure
     .input(reorderLessonsSchema)
-    .mutation(async ({ input }) => {
-      return lessonService.reorderLessons(input.items);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.reorderLessons(input.items, ctx.user.id, ctx.user.role);
     }),
 
   createModule: teacherProcedure
     .input(createModuleSchema)
-    .mutation(async ({ input }) => {
-      return lessonService.createModule(input);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.createModule(input, ctx.user.id, ctx.user.role);
     }),
 
   updateModule: teacherProcedure
     .input(updateModuleSchema)
-    .mutation(async ({ input }) => {
-      return lessonService.updateModule(input.id, input.title ?? "");
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.updateModule(input.id, input.title ?? "", ctx.user.id, ctx.user.role);
     }),
 
   deleteModule: teacherProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      return lessonService.deleteModule(input.id);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.deleteModule(input.id, ctx.user.id, ctx.user.role);
     }),
 
   reorderModules: teacherProcedure
     .input(reorderModulesSchema)
-    .mutation(async ({ input }) => {
-      return lessonService.reorderModules(input.items);
+    .mutation(async ({ input, ctx }) => {
+      return lessonService.reorderModules(input.items, ctx.user.id, ctx.user.role);
     }),
 });

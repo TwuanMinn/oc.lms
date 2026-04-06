@@ -25,25 +25,23 @@ export const courseRouter = router({
       return courseService.createCourse(ctx.user.id, input);
     }),
 
+  // A2: Use typed ctx.user.role instead of unsafe cast
   update: teacherProcedure
     .input(updateCourseSchema)
     .mutation(async ({ input, ctx }) => {
-      const role = (ctx.user as Record<string, unknown>).role as string;
-      return courseService.updateCourse(ctx.user.id, role, input);
+      return courseService.updateCourse(ctx.user.id, ctx.user.role, input);
     }),
 
   publish: teacherProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const role = (ctx.user as Record<string, unknown>).role as string;
-      return courseService.publishCourse(input.id, ctx.user.id, role);
+      return courseService.publishCourse(input.id, ctx.user.id, ctx.user.role);
     }),
 
   delete: teacherProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const role = (ctx.user as Record<string, unknown>).role as string;
-      return courseService.deleteCourse(input.id, ctx.user.id, role);
+      return courseService.deleteCourse(input.id, ctx.user.id, ctx.user.role);
     }),
 
   myCoursesAsTeacher: teacherProcedure.query(async ({ ctx }) => {

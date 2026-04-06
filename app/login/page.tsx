@@ -29,6 +29,17 @@ import {
   Sun,
   Moon,
   AlertTriangle,
+  BookOpen,
+  MonitorPlay,
+  Star,
+  FileText,
+  Sparkles,
+  Code,
+  Award,
+  Compass,
+  Cpu,
+  Target,
+  Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "motion/react";
@@ -41,39 +52,58 @@ const PASSWORD_RULES = [
 ];
 
 /* ================================================================
-   FLOATING PARTICLES
+   FLOATING SHAPES
    ================================================================ */
-function FloatingParticles() {
-  // Deterministic values to avoid hydration mismatch (no Math.random during render)
-  const particles = [
-    { id: 0, size: 3, x: 12, y: 18, duration: 10, delay: 0.5, drift: 15 },
-    { id: 1, size: 5, x: 35, y: 45, duration: 12, delay: 1.2, drift: -15 },
-    { id: 2, size: 2, x: 68, y: 22, duration: 9, delay: 2.0, drift: 15 },
-    { id: 3, size: 4, x: 82, y: 70, duration: 14, delay: 0.8, drift: -15 },
-    { id: 4, size: 3, x: 25, y: 85, duration: 11, delay: 3.0, drift: 15 },
-    { id: 5, size: 6, x: 55, y: 10, duration: 13, delay: 1.5, drift: -15 },
-    { id: 6, size: 2, x: 90, y: 40, duration: 8, delay: 2.5, drift: 15 },
-    { id: 7, size: 4, x: 15, y: 60, duration: 10, delay: 3.5, drift: -15 },
-    { id: 8, size: 3, x: 45, y: 90, duration: 12, delay: 0.3, drift: 15 },
-    { id: 9, size: 5, x: 72, y: 55, duration: 9, delay: 1.8, drift: -15 },
-    { id: 10, size: 2, x: 50, y: 30, duration: 11, delay: 2.8, drift: 15 },
-    { id: 11, size: 4, x: 8, y: 75, duration: 13, delay: 3.2, drift: -15 },
+function FloatingShapes() {
+  const shapes = [
+    { icon: GraduationCap, delay: 0, x: 12, y: 15, size: 56, rotate: 20, drift: 20 },
+    { icon: Globe, delay: 2, x: 80, y: 20, size: 72, rotate: -15, drift: -25 },
+    { icon: ShieldCheck, delay: 5, x: 15, y: 75, size: 64, rotate: 10, drift: 30 },
+    { icon: BookOpen, delay: 1, x: 85, y: 80, size: 80, rotate: -25, drift: -20 },
+    { icon: MonitorPlay, delay: 3, x: 50, y: 8, size: 48, rotate: 5, drift: 15 },
+    { icon: Star, delay: 4, x: 10, y: 50, size: 40, rotate: -10, drift: 25 },
+    { icon: FileText, delay: 2.5, x: 92, y: 50, size: 52, rotate: 15, drift: -15 },
+    { icon: Sparkles, delay: 3.5, x: 45, y: 92, size: 48, rotate: -20, drift: 20 },
   ];
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
+      {shapes.map((s, i) => (
         <motion.div
-          key={p.id}
+          key={i}
+          initial={{ opacity: 0, x: `0%`, y: `0%`, rotate: s.rotate }}
+          animate={{
+            opacity: [0, 0.4, 0],
+            y: [0, -60, -120],
+            x: [0, s.drift, 0],
+            rotate: [s.rotate, s.rotate + 25, s.rotate],
+          }}
+          transition={{ duration: 12 + i * 2, repeat: Infinity, ease: "linear", delay: s.delay }}
+          className="absolute text-sky-200/40 dark:text-sky-500/10 mix-blend-overlay drop-shadow-2xl"
+          style={{ left: `${s.x}%`, top: `${s.y}%` }}
+        >
+          <s.icon style={{ width: s.size, height: s.size }} strokeWidth={1} />
+        </motion.div>
+      ))}
+      
+      {/* Background drifting orbs for depth */}
+      {[...Array(6)].map((_, i) => (
+         <motion.div
+          key={`orb-${i}`}
           initial={{ opacity: 0 }}
           animate={{
-            opacity: [0, 0.6, 0],
-            y: [0, -40, -80],
-            x: [0, p.drift, 0],
+            opacity: [0, 0.5, 0],
+            y: [0, -100, -200],
+            x: [0, (i % 2 === 0 ? 40 : -40), 0],
           }}
-          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute rounded-full bg-white/30"
-          style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
+          transition={{ duration: 15 + i * 3, delay: i * 2, repeat: Infinity, ease: "linear" }}
+          className="absolute rounded-full bg-white/20 dark:bg-white/5 blur-sm"
+          style={{ 
+            width: 8 + (i * 4), 
+            height: 8 + (i * 4), 
+            left: `${15 + (i * 15)}%`, 
+            top: `${100 + (i * 10)}%` 
+          }}
         />
       ))}
     </div>
@@ -448,7 +478,7 @@ export default function AuthPage() {
 
   return (
     <div className={isDark ? "dark" : ""}>
-      <div className="flex min-h-screen items-center justify-center px-4 py-8 bg-white dark:bg-slate-900 transition-colors duration-500">
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 bg-transparent transition-colors duration-500">
 
         {/* Success overlay */}
         <AnimatePresence>
@@ -458,26 +488,87 @@ export default function AuthPage() {
         {/* Animated background */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute inset-0"
+            className="absolute inset-0 transition-colors duration-1000"
             style={{
-              background: `linear-gradient(135deg,
-                hsl(190, 80%, 95%) 0%,
-                hsl(200, 70%, 93%) 50%,
-                hsl(170, 60%, 94%) 100%)`,
+              background: isDark
+                ? `radial-gradient(circle at top right, #0f172a 0%, #020617 100%)`
+                : `radial-gradient(circle at top left, #f0f9ff 0%, #e0f2fe 100%)`,
             }}
           />
+          
+          {/* Moving Grid */}
+          <div className="absolute inset-0 overflow-hidden opacity-[0.05] dark:opacity-[0.03]">
+             <motion.div 
+               animate={{ y: [0, 64] }} 
+               transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+               className="absolute -inset-full h-[200%]"
+               style={{
+                 backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
+                 backgroundSize: '4rem 4rem',
+                 transform: 'perspective(1000px) rotateX(60deg)',
+                 transformOrigin: 'top center'
+               }}
+             />
+          </div>
+
           <motion.div
-            animate={{ x: [0, 60, -60, 0], y: [0, -40, 40, 0] }}
-            transition={{ duration: 18, ease: "linear", repeat: Infinity }}
-            className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-sky-400/8 dark:bg-sky-400/5 blur-[120px]"
+            animate={{ x: [0, 60, -60, 0], y: [0, -40, 40, 0], scale: [1, 1.2, 1] }}
+            transition={{ duration: 18, ease: "easeInOut", repeat: Infinity }}
+            className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-sky-400/20 dark:bg-sky-500/10 blur-[120px]"
           />
           <motion.div
-            animate={{ x: [0, -50, 50, 0], y: [0, 50, -50, 0] }}
-            transition={{ duration: 22, ease: "linear", repeat: Infinity }}
-            className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-teal-400/8 dark:bg-teal-400/5 blur-[100px]"
+            animate={{ x: [0, -50, 50, 0], y: [0, 50, -50, 0], scale: [1, 1.5, 1] }}
+            transition={{ duration: 22, ease: "easeInOut", repeat: Infinity }}
+            className="absolute bottom-1/4 right-1/4 h-[600px] w-[600px] rounded-full bg-teal-400/20 dark:bg-teal-500/10 blur-[120px]"
           />
+          <motion.div
+            animate={{ x: [0, 100, 0], y: [0, -100, 0], scale: [1, 0.8, 1] }}
+            transition={{ duration: 25, ease: "easeInOut", repeat: Infinity }}
+            className="absolute top-1/2 left-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-[100px]"
+          />
+          
+          {/* Main Background Floating Learning Icons */}
+          <div className="absolute inset-0 opacity-80 dark:opacity-60 mix-blend-multiply dark:mix-blend-screen overflow-hidden">
+            {[BookOpen, Globe, MonitorPlay, Star, ShieldCheck, GraduationCap, Code, Award, Compass, Cpu, Target, Rocket].map((Icon, idx) => {
+               // Hardcode spread out positions to avoid hydration errors
+               const positions = [
+                 { left: "8%", top: "12%" },
+                 { left: "82%", top: "16%" },
+                 { left: "72%", top: "82%" },
+                 { left: "12%", top: "78%" },
+                 { left: "42%", top: "8%" },
+                 { left: "52%", top: "85%" },
+                 { left: "88%", top: "45%" },
+                 { left: "6%", top: "48%" },
+                 { left: "25%", top: "25%" },
+                 { left: "65%", top: "30%" },
+                 { left: "30%", top: "65%" },
+                 { left: "60%", top: "60%" }
+               ];
+               const pos = positions[idx];
+               
+               return (
+                <motion.div
+                  key={`page-icon-${idx}`}
+                  initial={{ opacity: 0, rotate: idx * 30 }}
+                  animate={{
+                    opacity: [0.1, 0.7, 0.1],
+                    y: [0, -50, -100], // animate vertically using pixels
+                    x: [0, idx % 2 === 0 ? 40 : -40, 0],
+                    rotate: [idx * 30, idx * 30 + 120, idx * 30 + 240],
+                  }}
+                  transition={{ duration: 20 + (idx * 3), repeat: Infinity, ease: "linear", delay: idx * 1.5 }}
+                  className="absolute text-sky-500 dark:text-sky-300 drop-shadow-2xl"
+                  style={{ left: pos.left, top: pos.top }}
+                >
+                  <Icon size={100 + (idx * 8)} strokeWidth={0.75} />
+                </motion.div>
+              );
+            })}
+          </div>
+          
           {/* Dark mode overlay */}
-          <div className="absolute inset-0 bg-transparent dark:bg-slate-900/70 transition-colors duration-500" />
+          <div className="absolute inset-0 bg-transparent transition-colors duration-500" />
         </div>
 
         {/* Back to home button */}
@@ -602,7 +693,7 @@ export default function AuthPage() {
             >
               <div className="relative w-full h-full overflow-hidden rounded-l-[22px]">
                 <div className="absolute inset-0 bg-linear-to-br from-[#29b6f6] via-[#0288d1] to-[#0277bd]" />
-                <FloatingParticles />
+                <FloatingShapes />
                 <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-white/5" />
                 <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/5" />
 

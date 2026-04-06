@@ -1,0 +1,16 @@
+# I1: Prevent Docker from including unnecessary files
+node_modules
+.next
+.git
+.env
+.env*.local
+*.md
+__tests__
+e2e
+test-results
+playwright-report
+.agent
+.vscode
+docs
+scripts
+*-output.txt

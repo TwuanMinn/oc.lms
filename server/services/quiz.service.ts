@@ -3,6 +3,8 @@ import { TRPCError } from "@trpc/server";
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/server/db";
 import { quizzes, questions, quizAttempts } from "@/server/db/schema/quizzes";
+import { lessons } from "@/server/db/schema/courses";
+import { verifyCourseOwnership } from "./lesson.service";
 import type { SubmitQuizInput } from "@/lib/validations/quiz";
 
 export async function getQuizForStudent(quizId: string) {
@@ -116,4 +118,68 @@ export async function gradeQuiz(
     });
 
   return { ...attempt, feedback };
+}
+
+// #11: Verify the teacher owns the parent course before creating a quiz
+export async function createQuiz(
+  input: { lessonId: string; title: string; passingScore?: number },
+  teacherId: string,
+  role: string
+) {
+  const [lesson] = await db
+    .select({ courseId: lessons.courseId })
+    .from(lessons)
+    .where(eq(lessons.id, input.lessonId));
+
+  if (!lesson) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
+  }
+
+  await verifyCourseOwnership(lesson.courseId, teacherId, role);
+
+  const [quiz] = await db
+    .insert(quizzes)
+    .values(input)
+    .returning({ id: quizzes.id, title: quizzes.title });
+  return quiz;
+}
+
+// #11: Verify the teacher owns the parent course before adding a question
+export async function addQuestion(
+  input: {
+    quizId: string;
+    text: string;
+    type: "MCQ" | "MULTI";
+    options: Array<{ id: string; text: string }>;
+    correctOptions: string[];
+    position: number;
+  },
+  teacherId: string,
+  role: string
+) {
+  const [quiz] = await db
+    .select({ lessonId: quizzes.lessonId })
+    .from(quizzes)
+    .where(eq(quizzes.id, input.quizId));
+
+  if (!quiz) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Quiz not found" });
+  }
+
+  const [lesson] = await db
+    .select({ courseId: lessons.courseId })
+    .from(lessons)
+    .where(eq(lessons.id, quiz.lessonId));
+
+  if (!lesson) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Lesson not found" });
+  }
+
+  await verifyCourseOwnership(lesson.courseId, teacherId, role);
+
+  const [question] = await db
+    .insert(questions)
+    .values(input)
+    .returning({ id: questions.id, text: questions.text });
+  return question;
 }

@@ -75,9 +75,15 @@ export const notifications = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // #22: Added for audit trail
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("idx_notifications_user").on(table.userId),
+    index("idx_notifications_user_unread").on(table.userId, table.readAt),
   ]
 );
 

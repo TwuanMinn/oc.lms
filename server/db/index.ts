@@ -10,7 +10,13 @@ import * as social from "./schema/social";
 import * as billing from "./schema/billing";
 import * as platform from "./schema/platform";
 
-const client = postgres(env.DATABASE_URL, { prepare: false });
+// P3: Connection pool configuration
+const client = postgres(env.DATABASE_URL, {
+  prepare: false,
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
 export const db = drizzle(client, {
   schema: { ...users, ...courses, ...learning, ...quizzes, ...social, ...billing, ...platform },

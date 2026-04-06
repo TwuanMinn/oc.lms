@@ -1,5 +1,6 @@
 import "server-only";
-import { eq, and, isNull, desc, count } from "drizzle-orm";
+import { eq, and, isNull, desc, count, lt } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { db } from "@/server/db";
 import { notifications } from "@/server/db/schema/social";
 
@@ -21,8 +22,13 @@ export async function createNotification(
   return notification;
 }
 
-export async function getUnreadNotifications(userId: string) {
-  const unread = await db
+// #17: Accept limit/offset instead of hard-coded 20
+export async function getUnreadNotifications(
+  userId: string,
+  limit = 20,
+  offset = 0
+) {
+  return db
     .select({
       id: notifications.id,
       type: notifications.type,
@@ -34,9 +40,8 @@ export async function getUnreadNotifications(userId: string) {
     .from(notifications)
     .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)))
     .orderBy(desc(notifications.createdAt))
-    .limit(20);
-
-  return unread;
+    .limit(limit)
+    .offset(offset);
 }
 
 export async function getUnreadCount(userId: string): Promise<number> {
@@ -47,6 +52,29 @@ export async function getUnreadCount(userId: string): Promise<number> {
   return result?.count ?? 0;
 }
 
+// #10: Get all notifications (including read) with pagination
+export async function getAllNotifications(
+  userId: string,
+  limit = 20,
+  offset = 0
+) {
+  return db
+    .select({
+      id: notifications.id,
+      type: notifications.type,
+      title: notifications.title,
+      body: notifications.body,
+      link: notifications.link,
+      readAt: notifications.readAt,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
 export async function markAllRead(userId: string) {
   await db
     .update(notifications)
@@ -55,10 +83,61 @@ export async function markAllRead(userId: string) {
   return { success: true };
 }
 
-export async function markRead(notificationId: string) {
-  await db
+// #5: Atomic single-query markRead — eliminates TOCTOU race condition
+export async function markRead(notificationId: string, userId: string) {
+  const [updated] = await db
     .update(notifications)
     .set({ readAt: new Date() })
-    .where(eq(notifications.id, notificationId));
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId)
+      )
+    )
+    .returning({ id: notifications.id });
+
+  if (!updated) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Notification not found",
+    });
+  }
   return { success: true };
+}
+
+// #10: Delete a single notification (ownership enforced atomically)
+export async function deleteNotification(
+  notificationId: string,
+  userId: string
+) {
+  const [deleted] = await db
+    .delete(notifications)
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId)
+      )
+    )
+    .returning({ id: notifications.id });
+
+  if (!deleted) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Notification not found",
+    });
+  }
+  return { success: true };
+}
+
+// #13: Cleanup utility — delete notifications older than N days
+export async function deleteOldNotifications(days = 90) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const result = await db
+    .delete(notifications)
+    .where(lt(notifications.createdAt, cutoff))
+    .returning({ id: notifications.id });
+
+  return { deleted: result.length };
 }

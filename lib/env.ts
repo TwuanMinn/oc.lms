@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection URL"),
+  DIRECT_URL: z.string().url("DIRECT_URL must be a valid connection URL").optional(),
   BETTER_AUTH_SECRET: z.string().min(16, "BETTER_AUTH_SECRET must be at least 16 characters"),
   NEXT_PUBLIC_APP_URL: z.string().url().optional().default("http://localhost:3000"),
 });
