@@ -26,6 +26,8 @@
   --color-warning: #f59e0b;
   --radius: 0.5rem;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-fira-code: var(--font-fira-code), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-fira-sans: var(--font-fira-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ─── Light Theme (Blue-White Gradient) ─── */

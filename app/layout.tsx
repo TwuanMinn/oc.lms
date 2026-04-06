@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fira_Code, Fira_Sans } from "next/font/google";
 import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/client";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -8,6 +8,15 @@ import { Toaster } from "sonner";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+});
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  variable: "--font-fira-code",
+});
+const firaSans = Fira_Sans({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-fira-sans",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${firaCode.variable} ${firaSans.variable} font-sans antialiased`}>
         <ThemeProvider>
           <TRPCProvider>
             {children}

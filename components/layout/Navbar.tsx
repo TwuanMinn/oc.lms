@@ -15,7 +15,7 @@ import { springBounce } from "@/lib/motion";
 
 const navLinks = [
   { label: "Courses", href: "/courses" },
-  { label: "Community", href: "#" },
+  { label: "Community", href: "/community" },
   { label: "Pricing", href: "/pricing" },
   { label: "Help", href: "/help" },
 ];
