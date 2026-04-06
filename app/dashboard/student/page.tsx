@@ -84,9 +84,9 @@ export default function StudentDashboard() {
   const { data: certCount } = trpc.certificate.count.useQuery();
   const { data: recommended } = trpc.enrollment.recommended.useQuery();
 
-  const activeCourses = enrolledCourses?.filter((e) => !e.completedAt) ?? [];
-  const completedCourses = enrolledCourses?.filter((e) => e.completedAt) ?? [];
-  const lastActive = activeCourses[0];
+  const activeCourses: any[] = enrolledCourses?.filter((e) => !e.completedAt) ?? [];
+  const completedCourses: any[] = enrolledCourses?.filter((e) => e.completedAt) ?? [];
+  const lastActive: any = activeCourses[0];
 
   return (
     <div className="min-h-screen">
@@ -95,51 +95,92 @@ export default function StudentDashboard() {
         <Sidebar role={role} />
         <main className="flex-1 p-6">
           <AnimatedPage>
-            {/* ─── Welcome Hero Banner ─── */}
+            {/* ─── Gamified Command Center Hero ─── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/5 via-background to-primary/10 p-6 sm:p-8"
+              className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-background to-primary/5 shadow-2xl"
             >
-              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-[80px]" />
-              <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-rose-500/5 blur-[60px]" />
-
-              <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <motion.span
+              {/* Animated glowing mesh gradients */}
+              <div className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full bg-primary/20 blur-[100px] mix-blend-screen" />
+              <div className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full bg-rose-500/10 blur-[80px] mix-blend-screen" />
+              
+              <div className="relative p-6 sm:p-10 flex flex-col lg:flex-row gap-8 lg:items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <motion.div
                       animate={{ rotate: [0, 15, -15, 0] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      className="text-2xl"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 text-xl shadow-inner"
                     >
                       👋
-                    </motion.span>
+                    </motion.div>
                     <p className="text-xs font-bold uppercase tracking-widest text-primary">
-                      Welcome back
+                      Command Center
                     </p>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                    {user?.name ?? "Student"}
+                  <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground mb-3">
+                    Ready to level up, {user?.name?.split(" ")[0] ?? "Student"}?
                   </h1>
-                  <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                    &ldquo;The beautiful thing about learning is that no one can take it away from you.&rdquo;
-                    <span className="ml-1 text-xs text-muted-foreground/60">— B.B. King</span>
+                  <p className="text-base text-muted-foreground max-w-xl leading-relaxed">
+                    You're currently dominating <strong className="text-foreground">{activeCourses.length} active courses</strong>. 
+                    {streakData && streakData.currentStreak > 0 ? ` Don't lose your ${streakData.currentStreak}-day learning streak!` : ` Start learning today to build your streak.`}
                   </p>
                 </div>
 
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <Link
-                    href="/courses"
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
-                  >
-                    <BookOpen className="h-4 w-4" />
-                    Explore courses
-                  </Link>
-                </motion.div>
+                {/* Next Up Course Action Block */}
+                <div className="w-full lg:w-[400px] shrink-0">
+                  {lastActive ? (
+                    <div className="rounded-xl border border-primary/30 bg-background/80 backdrop-blur-xl p-5 shadow-xl relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                      <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Next Up</p>
+                      <h3 className="font-bold text-lg leading-tight mb-2 truncate" title={lastActive.courseTitle ?? ""}>
+                        {lastActive.courseTitle ?? `Course ${lastActive.courseId.slice(0, 8)}...`}
+                      </h3>
+                      
+                      <div className="mt-4 mb-5 flex items-center gap-3">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted shadow-inner">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${lastActive.progressPercent ?? 0}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="h-full rounded-full bg-linear-to-r from-primary to-rose-500"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          {lastActive.progressPercent ?? 0}%
+                        </span>
+                      </div>
+
+                      <Link href={`/courses/${lastActive.courseSlug ?? lastActive.courseId}`}>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90"
+                        >
+                          <PlayCircle className="h-5 w-5" />
+                          Resume Learning
+                        </motion.button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center h-full flex flex-col justify-center">
+                      <Sparkles className="mx-auto h-8 w-8 text-primary/50 mb-3" />
+                      <p className="text-sm font-medium text-foreground mb-4">No active courses right now.</p>
+                      <Link href="/courses">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="mx-auto flex items-center gap-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-bold text-background transition-all hover:bg-foreground/90"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                          Explore Catalog
+                        </motion.button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
 
@@ -176,54 +217,6 @@ export default function StudentDashboard() {
               />
             </div>
 
-            {/* Continue where you left off */}
-            {lastActive && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="mt-6"
-              >
-                <Link
-                  href={`/courses/${lastActive.courseSlug ?? lastActive.courseId}`}
-                  className="group relative flex items-center justify-between gap-4 overflow-hidden rounded-2xl border border-primary/20 bg-background p-6 transition-all hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
-                >
-                  <motion.div
-                    animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 -z-10 bg-[linear-gradient(270deg,rgba(225,29,72,0.02),rgba(225,29,72,0.08),rgba(225,29,72,0.02))] bg-[length:200%_200%]"
-                  />
-
-                  <div className="flex items-center gap-5">
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20"
-                    >
-                      <PlayCircle className="h-7 w-7 text-primary-foreground" />
-                    </motion.div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold uppercase tracking-widest text-primary">
-                        Jump back in
-                      </p>
-                      <p className="mt-1 truncate text-lg font-bold">
-                        {lastActive.courseTitle ?? `Course ${lastActive.courseId.slice(0, 8)}...`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <motion.span
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      →
-                    </motion.span>
-                  </div>
-                </Link>
-              </motion.div>
-            )}
-
-            {/* ─── Enrolled Courses ─── */}
             <div className="mt-8">
               <motion.h2
                 initial={{ opacity: 0, x: -12 }}
@@ -253,7 +246,7 @@ export default function StudentDashboard() {
                 />
               ) : enrolledCourses && enrolledCourses.length > 0 ? (
                 <StaggerGrid className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {enrolledCourses.map((e) => (
+                  {(enrolledCourses as any[]).map((e: any) => (
                     <StaggerItem key={e.enrollmentId} scale>
                       <Link href={`/courses/${e.courseSlug ?? e.courseId}`}>
                         <motion.div

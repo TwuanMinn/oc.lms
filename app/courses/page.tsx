@@ -89,18 +89,44 @@ export default function CoursesPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="sticky top-24 space-y-4"
+              className="sticky top-24 space-y-6"
             >
-              <div className="rounded-xl border border-border/50 bg-card p-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  Plans
+              {/* Category Filter */}
+              <div className="rounded-xl border border-border/50 bg-card p-5">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                  Categories
                 </h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  One plan = access to all courses
-                </p>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${!category ? "border-primary bg-primary" : "border-border/50 bg-background group-hover:border-primary/50"}`}>
+                      {!category && <Check className="h-3 w-3 text-primary-foreground" />}
+                    </div>
+                    <span className={`text-sm ${!category ? "font-semibold text-foreground" : "text-muted-foreground group-hover:text-foreground transition-colors"}`}>
+                      All Courses
+                    </span>
+                    <input type="radio" className="hidden" checked={!category} onChange={() => { setCategory(""); setPage(0); }} />
+                  </label>
+                  {categories?.map((cat: { id: string; name: string }) => (
+                    <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
+                      <div className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${category === cat.id ? "border-primary bg-primary" : "border-border/50 bg-background group-hover:border-primary/50"}`}>
+                        {category === cat.id && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      <span className={`text-sm ${category === cat.id ? "font-semibold text-foreground" : "text-muted-foreground group-hover:text-foreground transition-colors"}`}>
+                        {cat.name}
+                      </span>
+                      <input type="radio" className="hidden" checked={category === cat.id} onChange={() => { setCategory(cat.id); setPage(0); }} />
+                    </label>
+                  ))}
+                </div>
+              </div>
 
+              {/* Plans block */}
+              <div className="rounded-xl border border-border/50 bg-card p-5">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                  Access Plans
+                </h3>
                 {hasActiveSub ? (
-                  <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-center">
+                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-center">
                     <Check className="mx-auto h-5 w-5 text-emerald-400" />
                     <p className="mt-1 text-sm font-semibold text-emerald-400">
                       Active: {subscription.planName}
@@ -110,7 +136,7 @@ export default function CoursesPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="mt-4 space-y-3">
+                  <div className="space-y-3">
                     {plans?.map((plan) => {
                       const Icon = iconMap[plan.slug] ?? Zap;
                       return (
@@ -160,51 +186,13 @@ export default function CoursesPage() {
                               <span className="text-lg font-bold">
                                 ${Number(plan.price).toFixed(0)}
                               </span>
-                              <span className="text-[10px] text-muted-foreground">
-                                {plan.interval === "MONTHLY"
-                                  ? "/mo"
-                                  : plan.interval === "YEARLY"
-                                    ? "/yr"
-                                    : "once"}
-                              </span>
                             </div>
                           </div>
                         </motion.button>
                       );
                     })}
-
-                    <Link
-                      href="/pricing"
-                      className="flex items-center justify-center gap-1 rounded-lg py-2 text-xs font-medium text-primary transition-colors hover:text-primary/80"
-                    >
-                      Compare plans
-                      <ArrowRight className="h-3 w-3" />
-                    </Link>
                   </div>
                 )}
-              </div>
-
-              {/* Quick stats */}
-              <div className="rounded-xl border border-border/50 bg-card p-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                  Included
-                </h3>
-                <ul className="mt-3 space-y-2">
-                  {[
-                    "Unlimited course access",
-                    "Quizzes & certificates",
-                    "Progress tracking",
-                    "New courses added weekly",
-                  ].map((item) => (
-                    <li
-                      key={item}
-                      className="flex items-center gap-2 text-xs text-muted-foreground"
-                    >
-                      <Check className="h-3 w-3 shrink-0 text-emerald-400" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </motion.div>
           </aside>
@@ -241,13 +229,13 @@ export default function CoursesPage() {
                   Discover {data?.total ?? "..."} courses from expert instructors. Filter by category, search by topic, or browse what&apos;s trending.
                 </p>
 
-                {/* Category chips */}
+                {/* Category chips (Mobile Only) */}
                 {categories && categories.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="mt-4 flex flex-wrap gap-2"
+                    className="mt-4 flex flex-wrap gap-2 lg:hidden"
                   >
                     <button
                       onClick={() => { setCategory(""); setPage(0); }}
@@ -299,7 +287,7 @@ export default function CoursesPage() {
                 </div>
 
                 {categories && categories.length > 0 && (
-                  <div className="relative" ref={dropdownRef}>
+                  <div className="relative lg:hidden" ref={dropdownRef}>
                     <button
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                       className="flex items-center gap-2 rounded-lg border border-input bg-background py-2 pl-3 pr-4 text-sm outline-none ring-ring transition-all hover:bg-accent focus:ring-2 focus:shadow-lg focus:shadow-primary/5"

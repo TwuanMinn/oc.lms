@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, BookOpen, GraduationCap, Zap, Users, Award, TrendingUp, Star, Quote, PlayCircle, Clock } from "lucide-react";
+import { ArrowRight, BookOpen, GraduationCap, Zap, Users, Award, TrendingUp, Star, Quote, PlayCircle, Clock, CheckCircle2, ChevronRight, Check } from "lucide-react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import confetti from "canvas-confetti";
+import { TiltCard } from "@/components/ui/tilt-card";
 import {
   ScrollReveal,
   StaggerGrid,
@@ -110,26 +112,33 @@ export default function HomePage() {
   const statsRef = useRef<HTMLDivElement>(null);
   const statsInView = useInView(statsRef, { once: true, margin: "-80px" });
   const { isAuthenticated, dashboardPath, isLoading } = useAuth();
+  const [demoQuizState, setDemoQuizState] = useState<"idle" | "correct" | "wrong">("idle");
 
   const { scrollY } = useScroll();
   const heroImageY = useTransform(scrollY, [0, 800], [0, -120]);
   const heroBgY = useTransform(scrollY, [0, 800], [0, 250]);
+  
+  // Cinematic background color journey
+  const glowColor1 = useTransform(scrollY, [0, 1500, 3000], ["rgba(225,29,72,0.05)", "rgba(124,58,237,0.08)", "rgba(16,185,129,0.05)"]);
+  const glowColor2 = useTransform(scrollY, [0, 1500, 3000], ["rgba(225,29,72,0.03)", "rgba(79,70,229,0.08)", "rgba(14,165,233,0.05)"]);
 
   return (
     <div className="relative min-h-screen">
-      {/* Background ambient glow */}
+      {/* Background ambient glow journey */}
       <motion.div style={{ y: heroBgY }} className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute -top-40 left-1/2 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl"
+          style={{ backgroundColor: glowColor1 }}
+          className="absolute -top-40 left-1/2 h-[800px] w-[1000px] -translate-x-1/2 rounded-full blur-[100px]"
         />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.6 }}
           transition={{ duration: 2, delay: 0.5 }}
-          className="absolute -bottom-20 right-1/4 h-[300px] w-[500px] rounded-full bg-rose-500/3 blur-3xl"
+          style={{ backgroundColor: glowColor2 }}
+          className="absolute top-1/4 right-0 h-[600px] w-[800px] rounded-full blur-[120px]"
         />
       </motion.div>
 
@@ -138,7 +147,7 @@ export default function HomePage() {
 
       <main>
         {/* Hero */}
-        <section className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6">
+        <section className="mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <motion.div
@@ -252,6 +261,34 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
+
+          {/* Social Proof Trust Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+            className="mt-20 pt-10 border-t border-border/40"
+          >
+            <p className="text-center text-sm font-semibold text-muted-foreground mb-8 uppercase tracking-widest">
+              Trusted by instructors & teams at
+            </p>
+            <div className="overflow-hidden flex w-full relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-linear-to-r from-background to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-linear-to-l from-background to-transparent z-10" />
+              <div className="flex shrink-0 animate-[scroll-marquee_20s_linear_infinite] gap-16 pr-16 items-center">
+                {["Acme Corp", "Globex", "Initech", "Soylent", "Umbrella", "Stark Ind."].map((company, i) => (
+                  <div key={i} className="text-2xl font-black tracking-tighter text-muted-foreground/30 hover:text-muted-foreground transition-colors duration-300">
+                    {company}
+                  </div>
+                ))}
+                {["Acme Corp", "Globex", "Initech", "Soylent", "Umbrella", "Stark Ind."].map((company, i) => (
+                  <div key={i + "clone"} className="text-2xl font-black tracking-tighter text-muted-foreground/30 hover:text-muted-foreground transition-colors duration-300">
+                    {company}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </section>
 
         {/* Stats */}
@@ -317,31 +354,70 @@ export default function HomePage() {
             </ScrollReveal>
 
             <StaggerGrid className="mt-20 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <StaggerItem key={feature.title} scale>
-                  <motion.div
-                    whileHover={{
-                      y: -8,
-                    }}
-                    className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/50 bg-card/80 p-8 pt-10 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hover:shadow-[0_20px_40px_-15px_rgba(225,29,72,0.15)]"
-                  >
-                    {/* Hover Glow Background */}
-                    <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                    
-                    <div className="relative mb-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all duration-300 group-hover:-rotate-3 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-[0_0_20px_rgba(225,29,72,0.4)]">
-                      <feature.icon className="h-8 w-8" />
+              {/* Feature 1: Structured Learning */}
+              <StaggerItem scale>
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/50 bg-card/80 p-8 pt-10 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hover:shadow-[0_20px_40px_-15px_rgba(225,29,72,0.15)]">
+                  <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                  <div className="relative mb-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all duration-300 group-hover:-rotate-3 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-[0_0_20px_rgba(225,29,72,0.4)]">
+                    <BookOpen className="h-8 w-8" />
+                  </div>
+                  <div className="relative flex grow flex-col">
+                    <h3 className="mb-3 text-xl font-bold tracking-tight group-hover:text-primary transition-colors">Structured Learning</h3>
+                    <p className="text-base text-muted-foreground leading-relaxed mb-4">Courses organized into modules and lessons. Progress tracking shows exactly where you are.</p>
+                  </div>
+                </div>
+              </StaggerItem>
+
+              {/* Feature 2: Micro-Demo Quiz */}
+              <StaggerItem scale>
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-primary/20 bg-primary/5 p-8 pt-10 backdrop-blur-sm transition-all duration-300 shadow-[0_20px_40px_-15px_rgba(225,29,72,0.1)]">
+                  <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-100" />
+                  <div className="relative mb-6 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                    <GraduationCap className="h-8 w-8" />
+                  </div>
+                  <div className="relative flex grow flex-col">
+                    <h3 className="mb-2 text-xl font-bold tracking-tight text-primary">Try a Micro-Quiz</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">What does &quot;DOM&quot; stand for in web development?</p>
+                    <div className="flex flex-col gap-2 mt-auto">
+                      <button 
+                        onClick={() => setDemoQuizState("wrong")}
+                        className={`text-left px-3 py-2 text-xs font-medium rounded-lg border transition-all ${demoQuizState === "wrong" ? "bg-red-500/10 border-red-500/50 text-red-500" : "bg-card border-border/50 hover:border-primary/30"}`}
+                      >
+                        A. Data Object Matrix
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          setDemoQuizState("correct");
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          confetti({ 
+                            particleCount: 100, spread: 70, 
+                            origin: { x: (rect.left + rect.width / 2) / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight },
+                            colors: ['#e11d48', '#4f46e5', '#10b981']
+                          });
+                          setTimeout(() => setDemoQuizState("idle"), 3000);
+                        }}
+                        className={`text-left px-3 py-2 text-xs font-medium rounded-lg border transition-all ${demoQuizState === "correct" ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-500" : "bg-card border-border/50 hover:border-primary/30"}`}
+                      >
+                         {demoQuizState === "correct" ? <span className="flex items-center gap-1"><Check className="h-3 w-3" /> B. Document Object Model</span> : "B. Document Object Model"}
+                      </button>
                     </div>
-                    <div className="relative flex grow flex-col">
-                      <h3 className="mb-3 text-xl font-bold tracking-tight group-hover:text-primary transition-colors">
-                        {feature.title}
-                      </h3>
-                      <p className="text-base text-muted-foreground leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </motion.div>
-                </StaggerItem>
-              ))}
+                  </div>
+                </div>
+              </StaggerItem>
+
+              {/* Feature 3: Track Progress */}
+              <StaggerItem scale>
+                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/50 bg-card/80 p-8 pt-10 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hover:shadow-[0_20px_40px_-15px_rgba(225,29,72,0.15)]">
+                  <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                  <div className="relative mb-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all duration-300 group-hover:-rotate-3 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-[0_0_20px_rgba(225,29,72,0.4)]">
+                    <Zap className="h-8 w-8" />
+                  </div>
+                  <div className="relative flex grow flex-col">
+                    <h3 className="mb-3 text-xl font-bold tracking-tight group-hover:text-primary transition-colors">Track Progress</h3>
+                    <p className="text-base text-muted-foreground leading-relaxed">Mark lessons complete, see your progress ring fill up, and get your learning streak going.</p>
+                  </div>
+                </div>
+              </StaggerItem>
             </StaggerGrid>
           </div>
         </section>
@@ -367,33 +443,64 @@ export default function HomePage() {
             <StaggerGrid className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {trendingCourses.map((course) => (
                 <StaggerItem key={course.title} scale>
-                  <motion.div 
-                    whileHover={{ y: -6, boxShadow: "0 12px 30px -10px rgba(0,0,0,0.1)" }}
-                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-background/60 shadow-sm backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer"
-                  >
-                    {/* Fake Course Thumbnail Gradient */}
-                    <div className={`h-40 w-full bg-linear-to-br ${course.gradient} flex items-center justify-center relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-black/5" />
-                      <PlayCircle className={`h-12 w-12 opacity-50 ${course.iconColor} group-hover:scale-110 group-hover:opacity-80 transition-all duration-300`} />
-                    </div>
-                    
-                    <div className="p-6 flex flex-col grow">
-                      <div className="flex items-center justify-between mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        <span>{course.category}</span>
-                        <span className="flex items-center gap-1 text-amber-500"><Star className="h-3.5 w-3.5 fill-amber-500" /> {course.rating}</span>
+                  <TiltCard rotationIntensity={10} className="h-full">
+                    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/50 bg-background/60 shadow-sm backdrop-blur-md transition-all hover:border-primary/30 cursor-pointer">
+                      {/* Fake Course Thumbnail Gradient */}
+                      <div className={`h-40 w-full bg-linear-to-br ${course.gradient} flex items-center justify-center relative overflow-hidden`}>
+                        <div className="absolute inset-0 bg-black/5" />
+                        <PlayCircle className={`h-12 w-12 opacity-50 ${course.iconColor} group-hover:scale-110 group-hover:opacity-80 transition-all duration-300`} />
                       </div>
-                      <h3 className="text-lg font-bold mb-4 group-hover:text-primary transition-colors">{course.title}</h3>
                       
-                      <div className="mt-auto flex items-center justify-between text-sm text-muted-foreground border-t border-border/40 pt-4">
-                        <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> {course.students}</span>
-                        <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {course.modules} modules</span>
+                      <div className="p-6 flex flex-col grow">
+                        <div className="flex items-center justify-between mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          <span>{course.category}</span>
+                          <span className="flex items-center gap-1 text-amber-500"><Star className="h-3.5 w-3.5 fill-amber-500" /> {course.rating}</span>
+                        </div>
+                        <h3 className="text-lg font-bold mb-4 group-hover:text-primary transition-colors">{course.title}</h3>
+                        
+                        <div className="mt-auto flex items-center justify-between text-sm text-muted-foreground border-t border-border/40 pt-4">
+                          <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> {course.students}</span>
+                          <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {course.modules} modules</span>
+                        </div>
                       </div>
+                    </div>
+                  </TiltCard>
+                </StaggerItem>
+              ))}
+            </StaggerGrid>
+           </div>
+        </section>
+
+        {/* Instructor Spotlight */}
+        <section className="py-24 bg-card/10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <ScrollReveal direction="left">
+              <h2 className="text-3xl font-extrabold tracking-tight mb-2">Learn from industry experts</h2>
+              <p className="text-muted-foreground mb-12">Our instructors are leads and managers at top tech companies.</p>
+            </ScrollReveal>
+            <StaggerGrid className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { name: "Alex Rivera", role: "Ex-Google Engineer", classes: 12, rating: 5.0 },
+                { name: "Jordan Lee", role: "Sr. UX Lead @ Stripe", classes: 8, rating: 4.9 },
+                { name: "Sarah Chen", role: "Data Scientist @ Meta", classes: 15, rating: 4.9 },
+                { name: "Michael Vance", role: "Cloud Architect", classes: 9, rating: 4.8 }
+              ].map((instructor, i) => (
+                <StaggerItem key={i} scale>
+                  <motion.div whileHover={{ y: -8 }} className="group rounded-3xl border border-border/50 bg-card p-6 shadow-sm flex flex-col items-center text-center transition-all hover:border-primary/30">
+                    <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-black text-white bg-linear-to-br from-primary to-rose-500 mb-4 shadow-lg group-hover:scale-105 transition-transform`}>
+                      {instructor.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <h3 className="font-bold text-lg">{instructor.name}</h3>
+                    <p className="text-sm font-medium text-emerald-500 mb-4">{instructor.role}</p>
+                    <div className="w-full flex justify-between text-sm text-muted-foreground border-t border-border/40 pt-4 mt-auto">
+                      <span className="flex items-center gap-1"><BookOpen className="h-4 w-4" /> {instructor.classes}</span>
+                      <span className="flex items-center gap-1 text-amber-500"><Star className="h-3.5 w-3.5 fill-amber-500" /> {instructor.rating}</span>
                     </div>
                   </motion.div>
                 </StaggerItem>
               ))}
             </StaggerGrid>
-           </div>
+          </div>
         </section>
 
         {/* Testimonials */}
@@ -451,6 +558,39 @@ export default function HomePage() {
                   </motion.div>
                 ))}
               </InfiniteMarquee>
+            </div>
+          </div>
+        </section>
+
+        {/* Simple Pricing Teaser */}
+        <section className="py-24 border-y border-border/40 bg-card/20 relative overflow-hidden">
+          <div className="absolute left-1/4 top-1/4 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 relative z-10">
+            <ScrollReveal className="text-center mb-16">
+              <h2 className="text-3xl font-extrabold tracking-tight">Flexible plans for everyone</h2>
+              <p className="mt-4 text-muted-foreground max-w-lg mx-auto">No hidden fees. Learn at your own pace with our affordable options.</p>
+            </ScrollReveal>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <motion.div whileHover={{ y: -8 }} className="rounded-[2.5rem] border border-border/50 bg-card p-10 shadow-lg relative overflow-hidden">
+                <div className="mb-4 text-sm font-bold tracking-widest uppercase text-muted-foreground">Monthly</div>
+                <div className="flex items-baseline gap-2 mb-6"><span className="text-5xl font-black tracking-tight">$29</span><span className="text-muted-foreground">/mo</span></div>
+                <div className="space-y-4 mb-8">
+                  {['Access to all 500+ courses', 'Interactive quizzes', 'Community access'].map((f, i) => <div key={i} className="flex gap-3 items-center"><CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" /> <span className="text-sm font-medium">{f}</span></div>)}
+                </div>
+                <button className="w-full py-4 rounded-xl border-2 border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors">Start Free Trial</button>
+              </motion.div>
+              
+              <motion.div whileHover={{ y: -8 }} className="rounded-[2.5rem] border-2 border-primary bg-background p-10 shadow-xl shadow-primary/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-primary px-4 py-1.5 rounded-bl-[2rem] text-xs font-bold text-primary-foreground tracking-widest uppercase shadow-sm">Most Popular</div>
+                <div className="mb-4 text-sm font-bold tracking-widest uppercase text-primary">Lifetime</div>
+                <div className="flex items-baseline gap-2 mb-6"><span className="text-5xl font-black tracking-tight">$399</span><span className="text-muted-foreground">/once</span></div>
+                <div className="space-y-4 mb-8">
+                  {['Access to all 500+ courses', 'Interactive quizzes', 'Community access', '1-on-1 Mentorship', 'Download certificates'].map((f, i) => <div key={i} className="flex gap-3 items-center"><CheckCircle2 className="h-5 w-5 text-primary shrink-0" /> <span className="text-sm font-medium">{f}</span></div>)}
+                </div>
+                <AnimatedShimmerButton className="w-full bg-primary rounded-xl shadow-lg shadow-primary/20">
+                  <button className="w-full py-4 text-primary-foreground font-bold hover:bg-primary/90 transition-colors">Get Lifetime Access</button>
+                </AnimatedShimmerButton>
+              </motion.div>
             </div>
           </div>
         </section>

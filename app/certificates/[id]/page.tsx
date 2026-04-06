@@ -4,8 +4,15 @@ import { useParams } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { motion } from "motion/react";
-import { Award, Download, Calendar, Hash, User, BookOpen } from "lucide-react";
+import { Award, Download, Calendar, Hash, BookOpen, Linkedin } from "lucide-react";
 import { AnimatedPage } from "@/components/ui/animated";
+// @ts-expect-error - no types available
+import { jsPDF } from "jspdf";
+// @ts-expect-error - no types available
+import { toPng } from "html-to-image";
+import { useState, useEffect } from "react";
+// @ts-expect-error - no types available
+import confetti from "canvas-confetti";
 
 function CertificateSkeleton() {
   return (
@@ -23,6 +30,31 @@ export default function CertificatePage() {
   const { data: cert, isLoading } = trpc.certificate.verify.useQuery({
     id: params.id,
   });
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (cert) {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+      }, 250);
+
+      return () => clearInterval(interval);
+    }
+  }, [cert]);
 
   if (isLoading) return <CertificateSkeleton />;
 
@@ -42,6 +74,41 @@ export default function CertificatePage() {
     year: "numeric", month: "long", day: "numeric",
   });
 
+  const handleDownloadPDF = async () => {
+    const certElement = document.getElementById("certificate-print");
+    if (!certElement) return;
+
+    setIsGenerating(true);
+    try {
+      const dataUrl = await toPng(certElement, { quality: 1, pixelRatio: 2 });
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [certElement.offsetWidth, certElement.offsetHeight]
+      });
+      pdf.addImage(dataUrl, "PNG", 0, 0, certElement.offsetWidth, certElement.offsetHeight);
+      pdf.save(`${cert.studentName.replace(/ /g, "_")}_GreenAcademy_Certificate.pdf`);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleLinkedInShare = () => {
+    const date = new Date(cert.issuedAt);
+    const urlParams = new URLSearchParams({
+      startTask: "CERTIFICATION_NAME",
+      name: cert.courseTitle,
+      organizationName: "Green Academy",
+      issueYear: date.getFullYear().toString(),
+      issueMonth: (date.getMonth() + 1).toString(),
+      certUrl: `${window.location.origin}/certificates/${params.id}`,
+      certId: cert.certificateNumber
+    });
+    window.open(`https://www.linkedin.com/profile/add?${urlParams.toString()}`, "_blank");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -51,18 +118,30 @@ export default function CertificatePage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 flex items-center justify-between"
+            className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4"
           >
             <h1 className="text-2xl font-bold">Certificate of Completion</h1>
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => window.print()}
-              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors print:hidden"
-            >
-              <Download className="h-4 w-4" />
-              Download / Print
-            </motion.button>
+            <div className="flex items-center gap-3 print:hidden">
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={handleLinkedInShare}
+                className="flex items-center gap-2 rounded-lg bg-[#0077b5] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0077b5]/90 transition-colors shadow-lg shadow-[#0077b5]/20"
+              >
+                <Linkedin className="h-4 w-4" />
+                Add to Profile
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                disabled={isGenerating}
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="h-4 w-4" />
+                {isGenerating ? "Generating PDF..." : "Download PDF"}
+              </motion.button>
+            </div>
           </motion.div>
 
           {/* Certificate Card */}

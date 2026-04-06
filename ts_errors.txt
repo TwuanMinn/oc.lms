@@ -1,0 +1,26 @@
+__tests__/services/enrollment.test.ts(41,3): error TS2304: Cannot find name 'beforeEach'.
+__tests__/services/enrollment.test.ts(72,52): error TS2352: Conversion of type '{ from: Mock<() => { where: Mock<() => { id: string; }[]>; }>; }' to type 'PgSelectBuilder<SelectedFields, "db">' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ from: Mock<() => { where: Mock<() => { id: string; }[]>; }>; }' is missing the following properties from type 'PgSelectBuilder<SelectedFields, "db">': fields, session, dialect, withList, distinct
+app/certificates/[id]/page.tsx(9,23): error TS2307: Cannot find module 'jspdf' or its corresponding type declarations.
+app/certificates/[id]/page.tsx(10,23): error TS2307: Cannot find module 'html-to-image' or its corresponding type declarations.
+app/certificates/[id]/page.tsx(12,22): error TS2307: Cannot find module 'canvas-confetti' or its corresponding type declarations.
+app/dashboard/admin/analytics/page.tsx(198,54): error TS2345: Argument of type '(course: { courseId: string; title: string; enrollmentCount: number; }, idx: number) => JSX.Element' is not assignable to parameter of type '(value: Record<string, unknown>, index: number, array: Record<string, unknown>[]) => Element'.
+  Types of parameters 'course' and 'value' are incompatible.
+    Type 'Record<string, unknown>' is missing the following properties from type '{ courseId: string; title: string; enrollmentCount: number; }': courseId, title, enrollmentCount
+app/dashboard/student/courses/page.tsx(53,34): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
+app/dashboard/student/courses/page.tsx(67,33): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+app/dashboard/student/courses/page.tsx(67,61): error TS18046: 'e.courseId' is of type 'unknown'.
+app/dashboard/student/courses/page.tsx(71,60): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Date'.
+app/dashboard/student/courses/page.tsx(74,29): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/dashboard/student/page.tsx(138,85): error TS2322: Type '{}' is not assignable to type 'string'.
+app/dashboard/student/page.tsx(139,25): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+app/dashboard/student/page.tsx(139,62): error TS18046: 'lastActive.courseId' is of type 'unknown'.
+app/dashboard/student/page.tsx(152,27): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+app/dashboard/student/page.tsx(250,34): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
+app/dashboard/student/page.tsx(264,33): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+app/dashboard/student/page.tsx(264,61): error TS18046: 'e.courseId' is of type 'unknown'.
+app/dashboard/student/page.tsx(268,60): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | Date'.
+app/dashboard/student/page.tsx(271,29): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+app/dashboard/student/page.tsx(293,33): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+scripts/debug-auth.ts(24,44): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.
+scripts/debug-auth.ts(28,37): error TS2556: A spread argument must either have a tuple type or be passed to a rest parameter.

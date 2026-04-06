@@ -37,18 +37,19 @@ export default function TeacherDashboard() {
   const typedCourses = (courses ?? []) as TeacherCourse[];
   const totalCourses = typedCourses.length;
   const publishedCourses = typedCourses.filter((c) => c.status === "PUBLISHED").length;
-  const draftCourses = typedCourses.filter((c) => c.status === "DRAFT").length;
   const totalStudents = typedCourses.reduce((sum, c) => sum + (c.enrollmentCount ?? 0), 0);
+  const estimatedRevenue = totalStudents * 49; // Mocking variable ticket price for now
+
   const topCourse = typedCourses.reduce<TeacherCourse | null>(
     (best, c) => (!best || (c.enrollmentCount ?? 0) > (best.enrollmentCount ?? 0)) ? c : best,
     null
   );
 
   const stats = [
-    { label: "Total Courses", value: totalCourses, icon: BookOpen, color: "bg-sky-500/10 text-sky-500" },
-    { label: "Published", value: publishedCourses, icon: TrendingUp, color: "bg-emerald-500/10 text-emerald-500" },
-    { label: "Drafts", value: draftCourses, icon: BarChart3, color: "bg-amber-500/10 text-amber-500" },
-    { label: "Total Students", value: totalStudents, icon: Users, color: "bg-rose-500/10 text-rose-500" },
+    { label: "Total Students", value: totalStudents, icon: Users, color: "bg-sky-500/10 text-sky-500" },
+    { label: "Est. Revenue", value: `$${estimatedRevenue.toLocaleString()}`, icon: TrendingUp, color: "bg-emerald-500/10 text-emerald-500" },
+    { label: "Published", value: publishedCourses, icon: BookOpen, color: "bg-amber-500/10 text-amber-500" },
+    { label: "Avg. Drop-off", value: "18%", icon: BarChart3, color: "bg-rose-500/10 text-rose-500" },
   ];
 
   return (

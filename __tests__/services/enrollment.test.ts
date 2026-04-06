@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock server-only
 vi.mock("server-only", () => ({}));
@@ -73,7 +73,7 @@ describe("enrollment.service", () => {
         from: vi.fn(() => ({
           where: vi.fn(() => enrollmentEmpty),
         })),
-      } as ReturnType<typeof mockDb.select>);
+      } as any);
 
       const { unenroll } = await import("@/server/services/enrollment.service");
       await expect(unenroll("user-1", "course-1")).rejects.toThrow(

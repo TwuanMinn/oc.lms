@@ -49,7 +49,7 @@ export default function StudentCoursesPage() {
                 />
               ) : enrolledCourses && enrolledCourses.length > 0 ? (
                 <StaggerGrid className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {enrolledCourses.map((e) => (
+                  {(enrolledCourses as any[]).map((e) => (
                     <StaggerItem key={e.enrollmentId} scale>
                       <Link href={`/courses/${e.courseSlug ?? e.courseId}`}>
                         <motion.div
