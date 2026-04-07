@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, BookOpen, GraduationCap, Zap, Users, Award, TrendingUp, Star, Quote, PlayCircle, Clock, CheckCircle2, ChevronRight, Check } from "lucide-react";
+import { ArrowRight, BookOpen, GraduationCap, Zap, Users, Award, TrendingUp, Star, Quote, PlayCircle, Clock, CheckCircle2, Check, Sparkles, Target, Trophy, Flame, Linkedin, MessageCircle, ChevronDown, Shield, Cloud, Layers, Smartphone, BrainCircuit } from "lucide-react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
-import confetti from "canvas-confetti";
 import { TiltCard } from "@/components/ui/tilt-card";
 import {
   ScrollReveal,
@@ -20,32 +19,12 @@ import {
 import {
   fadeInUp,
   staggerContainer,
-  springBounce,
 } from "@/lib/motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/lib/hooks/useAuth";
 
-const features = [
-  {
-    icon: BookOpen,
-    title: "Structured Learning",
-    description:
-      "Courses organized into modules and lessons. Progress tracking shows exactly where you are.",
-  },
-  {
-    icon: GraduationCap,
-    title: "Interactive Quizzes",
-    description:
-      "Test your knowledge with MCQ and multi-select quizzes. Instant feedback and scoring.",
-  },
-  {
-    icon: Zap,
-    title: "Track Progress",
-    description:
-      "Mark lessons complete, see your progress ring fill up, and get your learning streak going.",
-  },
-];
+
 
 const stats = [
   { value: 10000, suffix: "+", label: "Students learning", icon: Users },
@@ -115,7 +94,7 @@ export default function HomePage() {
   const [demoQuizState, setDemoQuizState] = useState<"idle" | "correct" | "wrong">("idle");
 
   const { scrollY } = useScroll();
-  const heroImageY = useTransform(scrollY, [0, 800], [0, -120]);
+
   const heroBgY = useTransform(scrollY, [0, 800], [0, 250]);
   
   // Cinematic background color journey
@@ -167,7 +146,7 @@ export default function HomePage() {
                 <AnimatedText text="Learn without" delay={0.2} />{" "}
                 <AnimatedWordSwitcher
                   words={["limits", "boundaries", "friction", "compromise"]}
-                  className="bg-gradient-to-r from-primary to-rose-400 bg-clip-text text-transparent"
+                  className="bg-linear-to-r from-primary to-rose-400 bg-clip-text text-transparent"
                 />
               </h1>
 
@@ -220,12 +199,12 @@ export default function HomePage() {
               transition={{ type: "spring", stiffness: 120, damping: 20, delay: 0.4 }}
               className="relative hidden justify-end lg:flex"
             >
-              <div className="relative w-full max-w-lg aspect-square bg-gradient-to-br from-card to-background rounded-[2.5rem] shadow-2xl p-6 transform rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden border border-border/50">
+              <div className="relative w-full max-w-lg aspect-square bg-linear-to-br from-card to-background rounded-[2.5rem] shadow-2xl p-6 transform rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden border border-border/50">
                 <Image
                   src="/images/hero-illustration.png"
                   alt="Online learning platform"
                   fill
-                  className="object-cover rounded-3xl grayscale-[15%] hover:grayscale-0 transition-all duration-700 p-2"
+                  className="object-cover rounded-3xl grayscale-15 hover:grayscale-0 transition-all duration-700 p-2"
                   priority
                 />
                 
@@ -352,73 +331,102 @@ export default function HomePage() {
                 </p>
               </div>
             </ScrollReveal>
-
-            <StaggerGrid className="mt-20 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <StaggerGrid className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {/* Feature 1: Structured Learning */}
               <StaggerItem scale>
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/50 bg-card/80 p-8 pt-10 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hover:shadow-[0_20px_40px_-15px_rgba(225,29,72,0.15)]">
-                  <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <div className="relative mb-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all duration-300 group-hover:-rotate-3 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-[0_0_20px_rgba(225,29,72,0.4)]">
-                    <BookOpen className="h-8 w-8" />
+                <div className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border/30 bg-card p-6 sm:p-8 transition-all hover:shadow-lg hover:-translate-y-1">
+                  <div className="mb-6 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
+                    <BookOpen className="h-6 w-6" />
                   </div>
-                  <div className="relative flex grow flex-col">
-                    <h3 className="mb-3 text-xl font-bold tracking-tight group-hover:text-primary transition-colors">Structured Learning</h3>
-                    <p className="text-base text-muted-foreground leading-relaxed mb-4">Courses organized into modules and lessons. Progress tracking shows exactly where you are.</p>
-                  </div>
+                  <h3 className="mb-2 text-lg font-bold tracking-tight">Structured Learning</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">Courses organized into modules and lessons. Progress tracking shows exactly where you are.</p>
                 </div>
               </StaggerItem>
 
               {/* Feature 2: Micro-Demo Quiz */}
               <StaggerItem scale>
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-primary/20 bg-primary/5 p-8 pt-10 backdrop-blur-sm transition-all duration-300 shadow-[0_20px_40px_-15px_rgba(225,29,72,0.1)]">
-                  <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-100" />
-                  <div className="relative mb-6 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                    <GraduationCap className="h-8 w-8" />
+                <div className="group flex h-full flex-col overflow-hidden rounded-3xl border-transparent bg-primary/5 p-6 sm:p-8 transition-all hover:shadow-lg hover:-translate-y-1">
+                  <div className="mb-6 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground transition-transform group-hover:scale-105">
+                    <GraduationCap className="h-6 w-6" />
                   </div>
-                  <div className="relative flex grow flex-col">
-                    <h3 className="mb-2 text-xl font-bold tracking-tight text-primary">Try a Micro-Quiz</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">What does &quot;DOM&quot; stand for in web development?</p>
-                    <div className="flex flex-col gap-2 mt-auto">
-                      <button 
-                        onClick={() => setDemoQuizState("wrong")}
-                        className={`text-left px-3 py-2 text-xs font-medium rounded-lg border transition-all ${demoQuizState === "wrong" ? "bg-red-500/10 border-red-500/50 text-red-500" : "bg-card border-border/50 hover:border-primary/30"}`}
-                      >
-                        A. Data Object Matrix
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          setDemoQuizState("correct");
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          confetti({ 
-                            particleCount: 100, spread: 70, 
-                            origin: { x: (rect.left + rect.width / 2) / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight },
-                            colors: ['#e11d48', '#4f46e5', '#10b981']
-                          });
-                          setTimeout(() => setDemoQuizState("idle"), 3000);
-                        }}
-                        className={`text-left px-3 py-2 text-xs font-medium rounded-lg border transition-all ${demoQuizState === "correct" ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-500" : "bg-card border-border/50 hover:border-primary/30"}`}
-                      >
-                         {demoQuizState === "correct" ? <span className="flex items-center gap-1"><Check className="h-3 w-3" /> B. Document Object Model</span> : "B. Document Object Model"}
-                      </button>
-                    </div>
+                  <h3 className="mb-2 text-lg font-bold tracking-tight text-primary">Try a Micro-Quiz</h3>
+                  <p className="text-sm text-primary/70 leading-relaxed mb-6">What does &quot;DOM&quot; stand for in web development?</p>
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <button 
+                      onClick={() => setDemoQuizState("wrong")}
+                      className={`text-left px-4 py-2.5 text-xs font-semibold rounded-xl border transition-all ${demoQuizState === "wrong" ? "bg-red-50 border-red-200 text-red-600 dark:bg-red-950/30 dark:border-red-900" : "bg-background border-border/50 hover:border-primary/30"}`}
+                    >
+                      A. Data Object Matrix
+                    </button>
+                    <button 
+                      onClick={async (e) => {
+                        setDemoQuizState("correct");
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const { default: confetti } = await import("canvas-confetti");
+                        confetti({ 
+                          particleCount: 100, spread: 70, 
+                          origin: { x: (rect.left + rect.width / 2) / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight },
+                          colors: ['#e11d48', '#4f46e5', '#10b981']
+                        });
+                        setTimeout(() => setDemoQuizState("idle"), 3000);
+                      }}
+                      className={`text-left px-4 py-2.5 text-xs font-semibold rounded-xl border transition-all ${demoQuizState === "correct" ? "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/30 dark:border-emerald-900" : "bg-background border-border/50 hover:border-primary/30"}`}
+                    >
+                       {demoQuizState === "correct" ? <span className="flex items-center gap-1.5"><Check className="h-4 w-4" /> B. Document Object Model</span> : "B. Document Object Model"}
+                    </button>
                   </div>
                 </div>
               </StaggerItem>
 
               {/* Feature 3: Track Progress */}
               <StaggerItem scale>
-                <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/50 bg-card/80 p-8 pt-10 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hover:shadow-[0_20px_40px_-15px_rgba(225,29,72,0.15)]">
-                  <div className="absolute -inset-px bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <div className="relative mb-8 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-all duration-300 group-hover:-rotate-3 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-[0_0_20px_rgba(225,29,72,0.4)]">
-                    <Zap className="h-8 w-8" />
+                <div className="group flex h-full flex-col overflow-hidden rounded-3xl border border-border/30 bg-card p-6 sm:p-8 transition-all hover:shadow-lg hover:-translate-y-1">
+                  <div className="mb-6 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-105">
+                    <Zap className="h-6 w-6" />
                   </div>
-                  <div className="relative flex grow flex-col">
-                    <h3 className="mb-3 text-xl font-bold tracking-tight group-hover:text-primary transition-colors">Track Progress</h3>
-                    <p className="text-base text-muted-foreground leading-relaxed">Mark lessons complete, see your progress ring fill up, and get your learning streak going.</p>
-                  </div>
+                  <h3 className="mb-2 text-lg font-bold tracking-tight">Track Progress</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">Mark lessons complete, see your progress ring fill up, and get your learning streak going.</p>
                 </div>
               </StaggerItem>
             </StaggerGrid>
+
+            {/* Industry Experts Sub-section */}
+            <div className="mt-32">
+              <ScrollReveal>
+                <div className="mb-10 text-center sm:text-left">
+                  <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Learn from industry experts</h3>
+                  <p className="mt-2 text-muted-foreground text-lg">Our instructors are leads and managers at top tech companies.</p>
+                </div>
+              </ScrollReveal>
+
+              <StaggerGrid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { initials: "AR", name: "Alex Rivera", role: "Ex-Google Engineer", roleColor: "text-emerald-600 dark:text-emerald-400", courses: 12, rating: 5.0, gradient: "from-indigo-500 to-rose-500" },
+                  { initials: "JL", name: "Jordan Lee", role: "Sr. UX Lead @ Stripe", roleColor: "text-emerald-600 dark:text-emerald-400", courses: 8, rating: 4.9, gradient: "from-purple-500 to-pink-500" },
+                  { initials: "SC", name: "Sarah Chen", role: "Data Scientist @ Meta", roleColor: "text-emerald-600 dark:text-emerald-400", courses: 15, rating: 4.9, gradient: "from-blue-500 to-indigo-500" },
+                  { initials: "MV", name: "Michael Vance", role: "Cloud Architect", roleColor: "text-emerald-600 dark:text-emerald-400", courses: 9, rating: 4.8, gradient: "from-violet-500 to-fuchsia-500" },
+                ].map((inst, i) => (
+                  <StaggerItem key={i} scale>
+                    <div className="group flex h-full flex-col items-center overflow-hidden rounded-3xl border border-border/30 bg-card p-6 sm:p-8 transition-all hover:shadow-lg hover:-translate-y-1">
+                      {/* Avatar */}
+                      <div className={`w-20 h-20 rounded-full mb-5 bg-linear-to-br ${inst.gradient} flex items-center justify-center text-white text-2xl font-bold tracking-wide shadow-sm transition-transform group-hover:scale-105`}>
+                        {inst.initials}
+                      </div>
+                      
+                      {/* Info */}
+                      <h4 className="text-lg font-bold tracking-tight mb-1">{inst.name}</h4>
+                      <p className={`text-xs font-semibold ${inst.roleColor} mb-6`}>{inst.role}</p>
+                      
+                      {/* Footer Stats */}
+                      <div className="w-full flex items-center justify-between text-muted-foreground text-xs font-medium mt-auto pt-4 border-t border-border/40">
+                        <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> {inst.courses}</span>
+                        <span className="flex items-center gap-1.5"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> {inst.rating}</span>
+                      </div>
+                    </div>
+                  </StaggerItem>
+                ))}
+              </StaggerGrid>
+            </div>
           </div>
         </section>
 
@@ -471,37 +479,6 @@ export default function HomePage() {
            </div>
         </section>
 
-        {/* Instructor Spotlight */}
-        <section className="py-24 bg-card/10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <ScrollReveal direction="left">
-              <h2 className="text-3xl font-extrabold tracking-tight mb-2">Learn from industry experts</h2>
-              <p className="text-muted-foreground mb-12">Our instructors are leads and managers at top tech companies.</p>
-            </ScrollReveal>
-            <StaggerGrid className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { name: "Alex Rivera", role: "Ex-Google Engineer", classes: 12, rating: 5.0 },
-                { name: "Jordan Lee", role: "Sr. UX Lead @ Stripe", classes: 8, rating: 4.9 },
-                { name: "Sarah Chen", role: "Data Scientist @ Meta", classes: 15, rating: 4.9 },
-                { name: "Michael Vance", role: "Cloud Architect", classes: 9, rating: 4.8 }
-              ].map((instructor, i) => (
-                <StaggerItem key={i} scale>
-                  <motion.div whileHover={{ y: -8 }} className="group rounded-3xl border border-border/50 bg-card p-6 shadow-sm flex flex-col items-center text-center transition-all hover:border-primary/30">
-                    <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-black text-white bg-linear-to-br from-primary to-rose-500 mb-4 shadow-lg group-hover:scale-105 transition-transform`}>
-                      {instructor.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <h3 className="font-bold text-lg">{instructor.name}</h3>
-                    <p className="text-sm font-medium text-emerald-500 mb-4">{instructor.role}</p>
-                    <div className="w-full flex justify-between text-sm text-muted-foreground border-t border-border/40 pt-4 mt-auto">
-                      <span className="flex items-center gap-1"><BookOpen className="h-4 w-4" /> {instructor.classes}</span>
-                      <span className="flex items-center gap-1 text-amber-500"><Star className="h-3.5 w-3.5 fill-amber-500" /> {instructor.rating}</span>
-                    </div>
-                  </motion.div>
-                </StaggerItem>
-              ))}
-            </StaggerGrid>
-          </div>
-        </section>
 
         {/* Testimonials */}
         <section className="py-24">
@@ -526,33 +503,33 @@ export default function HomePage() {
                       borderColor: "rgba(225, 29, 72, 0.25)",
                     }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="relative w-[320px] shrink-0 rounded-2xl border border-border/50 bg-card p-6 shadow-sm mr-6 flex flex-col justify-between"
+                    className="relative w-[480px] shrink-0 rounded-3xl border border-border/50 bg-card p-8 shadow-sm mr-8 flex flex-col justify-between"
                   >
                     <div>
-                      <Quote className="absolute right-4 top-4 h-6 w-6 text-primary/10" />
-                      <div className="flex items-center gap-1">
+                      <Quote className="absolute right-6 top-6 h-10 w-10 text-primary/5" />
+                      <div className="flex items-center gap-1.5">
                         {Array.from({ length: t.rating }).map((_, i) => (
                           <Star
                             key={i}
-                            className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                            className="h-5 w-5 fill-amber-400 text-amber-400"
                           />
                         ))}
                       </div>
-                      <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                      <p className="mt-6 text-lg sm:text-xl font-medium leading-relaxed text-foreground/90">
                         &ldquo;{t.quote}&rdquo;
                       </p>
                     </div>
-                    <div className="mt-6 flex items-center gap-3 border-t border-border/40 pt-4">
+                    <div className="mt-8 flex items-center gap-4 border-t border-border/40 pt-6 relative z-10">
                       <Image
                         src={t.avatar}
                         alt={t.name}
-                        width={40}
-                        height={40}
+                        width={60}
+                        height={60}
                         className="rounded-full object-cover shadow-sm bg-accent/50"
                       />
                       <div>
-                        <p className="text-sm font-semibold">{t.name}</p>
-                        <p className="text-xs text-muted-foreground">{t.role}</p>
+                        <p className="text-lg font-bold">{t.name}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">{t.role}</p>
                       </div>
                     </div>
                   </motion.div>
@@ -562,35 +539,407 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Simple Pricing Teaser */}
-        <section className="py-24 border-y border-border/40 bg-card/20 relative overflow-hidden">
-          <div className="absolute left-1/4 top-1/4 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 relative z-10">
-            <ScrollReveal className="text-center mb-16">
-              <h2 className="text-3xl font-extrabold tracking-tight">Flexible plans for everyone</h2>
-              <p className="mt-4 text-muted-foreground max-w-lg mx-auto">No hidden fees. Learn at your own pace with our affordable options.</p>
+        {/* Journey to Mastery Pathway */}
+        <section className="relative py-24 sm:py-32 overflow-hidden">
+          {/* Dual ambient glows */}
+          <div className="absolute left-1/4 top-0 -z-10 h-[600px] w-[600px] rounded-full bg-primary/8 blur-[150px]" />
+          <div className="absolute right-1/4 bottom-0 -z-10 h-[400px] w-[500px] rounded-full bg-rose-500/5 blur-[120px]" />
+          
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <ScrollReveal className="text-center mb-20">
+              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 mb-6 text-xs font-bold text-primary uppercase tracking-widest shadow-sm">
+                <Sparkles className="h-4 w-4 mr-2" /> Learning Paths
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+                Your path to{" "}
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-rose-400">mastery</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
+                A structured curriculum designed to take you from fundamentals to production-ready skills.
+              </p>
             </ScrollReveal>
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <motion.div whileHover={{ y: -8 }} className="rounded-[2.5rem] border border-border/50 bg-card p-10 shadow-lg relative overflow-hidden">
-                <div className="mb-4 text-sm font-bold tracking-widest uppercase text-muted-foreground">Monthly</div>
-                <div className="flex items-baseline gap-2 mb-6"><span className="text-5xl font-black tracking-tight">$29</span><span className="text-muted-foreground">/mo</span></div>
-                <div className="space-y-4 mb-8">
-                  {['Access to all 500+ courses', 'Interactive quizzes', 'Community access'].map((f, i) => <div key={i} className="flex gap-3 items-center"><CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" /> <span className="text-sm font-medium">{f}</span></div>)}
-                </div>
-                <button className="w-full py-4 rounded-xl border-2 border-primary/20 text-primary font-bold hover:bg-primary/5 transition-colors">Start Free Trial</button>
-              </motion.div>
-              
-              <motion.div whileHover={{ y: -8 }} className="rounded-[2.5rem] border-2 border-primary bg-background p-10 shadow-xl shadow-primary/10 relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-primary px-4 py-1.5 rounded-bl-[2rem] text-xs font-bold text-primary-foreground tracking-widest uppercase shadow-sm">Most Popular</div>
-                <div className="mb-4 text-sm font-bold tracking-widest uppercase text-primary">Lifetime</div>
-                <div className="flex items-baseline gap-2 mb-6"><span className="text-5xl font-black tracking-tight">$399</span><span className="text-muted-foreground">/once</span></div>
-                <div className="space-y-4 mb-8">
-                  {['Access to all 500+ courses', 'Interactive quizzes', 'Community access', '1-on-1 Mentorship', 'Download certificates'].map((f, i) => <div key={i} className="flex gap-3 items-center"><CheckCircle2 className="h-5 w-5 text-primary shrink-0" /> <span className="text-sm font-medium">{f}</span></div>)}
-                </div>
-                <AnimatedShimmerButton className="w-full bg-primary rounded-xl shadow-lg shadow-primary/20">
-                  <button className="w-full py-4 text-primary-foreground font-bold hover:bg-primary/90 transition-colors">Get Lifetime Access</button>
-                </AnimatedShimmerButton>
-              </motion.div>
+
+            {/* Timeline */}
+            <div className="relative max-w-5xl mx-auto pb-12">
+              {/* Vertical connecting line */}
+              <div className="absolute left-12 md:left-1/2 top-0 bottom-0 w-1 -translate-x-1/2">
+                <div className="absolute inset-0 rounded-full bg-linear-to-b from-primary/40 via-rose-400/30 to-emerald-500/20" />
+                <motion.div 
+                  initial={{ height: 0 }} 
+                  whileInView={{ height: "100%" }} 
+                  viewport={{ once: true }} 
+                  transition={{ duration: 2.5, ease: "easeInOut" }}
+                  className="absolute top-0 left-0 w-full rounded-full bg-linear-to-b from-primary via-rose-400 to-emerald-500 origin-top"
+                >
+                  {/* Destination Stop Circle (travels with line) */}
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-16 h-16 flex items-center justify-center">
+                    {/* Radar Pulse Rings */}
+                    <motion.div 
+                      className="absolute inset-0 rounded-full bg-emerald-500"
+                      animate={{ scale: [1, 3], opacity: [0.4, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+                    />
+                    <motion.div 
+                      className="absolute inset-0 rounded-full bg-emerald-500"
+                      animate={{ scale: [1, 3], opacity: [0.4, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut", delay: 1.25 }}
+                    />
+                    {/* Core Circle */}
+                    <div className="relative z-10 w-16 h-16 rounded-full border-8 border-background bg-emerald-500 flex items-center justify-center ring-4 ring-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.5)]">
+                      <div className="w-5 h-5 rounded-full bg-background/90" />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {[
+                { 
+                  title: "Foundations", 
+                  desc: "Master HTML, CSS, JavaScript, and Git. Build real projects with guided, hands-on exercises from day one.", 
+                  icon: BookOpen, 
+                  level: "Beginner",
+                  modules: 8, hours: 24, progress: 100,
+                  iconBg: "bg-blue-500/10", iconRing: "ring-blue-500/30", iconColor: "text-blue-500",
+                  gradient: "from-blue-500/10 to-cyan-500/5",
+                  progressColor: "from-blue-500 to-cyan-500"
+                },
+                { 
+                  title: "Advanced Systems", 
+                  desc: "Dive deep into React, Next.js, databases, and API design. Learn architecture patterns from top engineering teams.", 
+                  icon: Zap, 
+                  level: "Intermediate",
+                  modules: 12, hours: 40, progress: 66,
+                  iconBg: "bg-primary/10", iconRing: "ring-primary/30", iconColor: "text-primary",
+                  gradient: "from-primary/10 to-rose-500/5",
+                  progressColor: "from-primary to-rose-500"
+                },
+                { 
+                  title: "Production Deploy", 
+                  desc: "Ship real applications with CI/CD, monitoring, security, and scaling. Graduate with a portfolio of deployed projects.", 
+                  icon: Target, 
+                  level: "Advanced",
+                  modules: 10, hours: 32, progress: 20,
+                  iconBg: "bg-emerald-500/10", iconRing: "ring-emerald-500/30", iconColor: "text-emerald-500",
+                  gradient: "from-emerald-500/10 to-teal-500/5",
+                  progressColor: "from-emerald-500 to-teal-500"
+                },
+                { 
+                  title: "Testing & QA", 
+                  desc: "Write bulletproof unit, integration, and E2E tests. Master TDD workflows, mocking strategies, and CI test pipelines.", 
+                  icon: Shield, 
+                  level: "Intermediate",
+                  modules: 8, hours: 28, progress: 45,
+                  iconBg: "bg-amber-500/10", iconRing: "ring-amber-500/30", iconColor: "text-amber-500",
+                  gradient: "from-amber-500/10 to-yellow-500/5",
+                  progressColor: "from-amber-500 to-yellow-500"
+                },
+                { 
+                  title: "Cloud & DevOps", 
+                  desc: "Deploy to AWS, GCP, and Vercel. Automate with Docker, GitHub Actions, and infrastructure-as-code patterns.", 
+                  icon: Cloud, 
+                  level: "Advanced",
+                  modules: 9, hours: 36, progress: 10,
+                  iconBg: "bg-sky-500/10", iconRing: "ring-sky-500/30", iconColor: "text-sky-500",
+                  gradient: "from-sky-500/10 to-blue-500/5",
+                  progressColor: "from-sky-500 to-blue-500"
+                },
+                { 
+                  title: "System Design", 
+                  desc: "Design scalable distributed systems. Master load balancing, caching, message queues, and microservice architecture.", 
+                  icon: Layers, 
+                  level: "Expert",
+                  modules: 6, hours: 20, progress: 85,
+                  iconBg: "bg-rose-500/10", iconRing: "ring-rose-500/30", iconColor: "text-rose-500",
+                  gradient: "from-rose-500/10 to-pink-500/5",
+                  progressColor: "from-rose-500 to-pink-500"
+                },
+                { 
+                  title: "Mobile Development", 
+                  desc: "Build cross-platform mobile apps with React Native. Handle navigation, native APIs, animations, and app store deployment.", 
+                  icon: Smartphone, 
+                  level: "Intermediate",
+                  modules: 11, hours: 34, progress: 33,
+                  iconBg: "bg-violet-500/10", iconRing: "ring-violet-500/30", iconColor: "text-violet-500",
+                  gradient: "from-violet-500/10 to-purple-500/5",
+                  progressColor: "from-violet-500 to-purple-500"
+                },
+                { 
+                  title: "AI & Machine Learning", 
+                  desc: "Integrate AI APIs, build intelligent features, and understand ML fundamentals. From prompt engineering to model fine-tuning.", 
+                  icon: BrainCircuit, 
+                  level: "Expert",
+                  modules: 7, hours: 26, progress: 63,
+                  iconBg: "bg-teal-500/10", iconRing: "ring-teal-500/30", iconColor: "text-teal-500",
+                  gradient: "from-teal-500/10 to-cyan-500/5",
+                  progressColor: "from-teal-500 to-cyan-500"
+                },
+              ].map((step, idx) => (
+                <div key={idx} className={`relative flex items-start gap-6 md:gap-40 mb-20 last:mb-0 ${idx % 2 === 1 ? "md:flex-row-reverse" : ""}`}>
+                    {/* Icon node on the timeline — pops in then floats */}
+                    <div className="absolute left-12 md:left-1/2 -translate-x-1/2 z-20">
+                      <motion.div 
+                        initial={{ scale: 0, opacity: 0 }}
+                        whileInView={{ scale: 1, opacity: 1 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ type: "spring", stiffness: 260, damping: 15, delay: idx * 0.1 }}
+                        whileHover={{ scale: 1.15, rotate: -6 }}
+                        className={`w-24 h-24 rounded-3xl ${step.iconBg} ${step.iconColor} ring-4 ${step.iconRing} ring-offset-2 ring-offset-background flex items-center justify-center shadow-lg backdrop-blur-sm`}
+                      >
+                        <motion.div
+                          animate={{ y: [0, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: idx * 0.3 }}
+                        >
+                          <step.icon className="h-10 w-10" />
+                        </motion.div>
+                      </motion.div>
+                    </div>
+
+                    {/* Spacer for mobile (accounts for icon) */}
+                    <div className="w-28 shrink-0 md:hidden" />
+
+                    {/* Empty side (desktop only) */}
+                    <div className="hidden md:block md:w-1/2" />
+
+                    {/* Card — slides in from the side */}
+                    <motion.div 
+                      initial={{ opacity: 0, x: idx % 2 === 0 ? 60 : -60, y: 20 }}
+                      whileInView={{ opacity: 1, x: 0, y: 0 }}
+                      viewport={{ once: true, margin: "-80px" }}
+                      transition={{ type: "spring", stiffness: 100, damping: 18, delay: idx * 0.08 + 0.15 }}
+                      whileHover={{ y: -6, boxShadow: "0 25px 50px -15px rgba(225,29,72,0.12)" }}
+                      className="grow md:w-1/2 group"
+                    >
+                      <div className={`relative overflow-hidden rounded-3xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-sm transition-all duration-300 hover:border-primary/30 hover:shadow-xl`}>
+                        {/* Top gradient accent */}
+                        <div className={`h-1.5 w-full bg-linear-to-r ${step.gradient}`} />
+                        
+                        {/* Hover glow overlay */}
+                        <div className="absolute -inset-px bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-3xl" />
+                        
+                        <div className="relative p-7">
+                          {/* Header row */}
+                          <div className="flex items-center justify-between mb-4">
+                            <motion.span 
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              whileInView={{ opacity: 1, scale: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ delay: idx * 0.1 + 0.3 }}
+                              className={`text-xs font-bold uppercase tracking-widest ${step.iconColor} ${step.iconBg} px-3 py-1 rounded-full`}
+                            >
+                              {step.level}
+                            </motion.span>
+                            <span className="text-xs font-medium text-muted-foreground">{step.modules} modules · {step.hours}h</span>
+                          </div>
+
+                          {/* Title & description */}
+                          <h3 className="text-xl font-bold tracking-tight mb-2 group-hover:text-primary transition-colors duration-300">{step.title}</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed mb-5">{step.desc}</p>
+                          
+                          {/* Animated progress bar */}
+                          <div>
+                            <div className="flex justify-between text-xs font-medium text-muted-foreground mb-1.5">
+                              <span>Curriculum progress</span>
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.6 + idx * 0.2 }}
+                                className="text-foreground font-bold"
+                              >
+                                {step.progress}%
+                              </motion.span>
+                            </div>
+                            <div className="h-2 w-full bg-secondary/80 rounded-full overflow-hidden">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${step.progress}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1.4, delay: 0.5 + idx * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                                className={`h-full rounded-full bg-linear-to-r ${step.progressColor}`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Proof of Skill Bento Grid */}
+        <section className="relative py-24 border-y border-border/40 bg-card/10 overflow-hidden">
+          <div className="absolute right-0 top-0 -z-10 h-[500px] w-[500px] rounded-full bg-rose-500/5 blur-[150px]" />
+          <div className="absolute left-0 bottom-0 -z-10 h-[400px] w-[400px] rounded-full bg-amber-500/5 blur-[120px]" />
+          
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <ScrollReveal className="mb-16">
+              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 mb-6 text-xs font-bold text-primary uppercase tracking-widest shadow-sm">
+                <Trophy className="h-4 w-4 mr-2" /> Credentials
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-center">
+                Prove your{" "}
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-500 to-orange-500">expertise</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground max-w-2xl mx-auto text-center text-lg">Build a verified portfolio of achievements as you learn and grow.</p>
+            </ScrollReveal>
+
+            <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+               {/* Main Certificate Card */}
+               <TiltCard rotationIntensity={12} className="md:col-span-2 h-full">
+                 <div className="rounded-3xl border border-border/50 bg-card p-10 shadow-lg relative overflow-hidden h-full flex flex-col group transition-all duration-300 hover:border-primary/30 hover:shadow-[0_20px_40px_-15px_rgba(225,29,72,0.1)]">
+                    {/* Background decoration */}
+                    <div className="absolute -right-16 -top-16 opacity-[0.04] group-hover:opacity-[0.08] transition-opacity duration-700">
+                      <Award className="w-80 h-80" />
+                    </div>
+                    <div className="absolute bottom-0 right-0 w-80 h-40 bg-linear-to-tl from-primary/5 to-transparent rounded-tl-full" />
+                    
+                    <div className="relative z-10 flex items-start justify-between mb-8">
+                       <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-amber-200 to-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                          <Trophy className="text-amber-900 w-8 h-8" />
+                       </div>
+                       <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5">
+                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                         <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Blockchain Verified</span>
+                       </div>
+                    </div>
+                    
+                    <div className="relative z-10 grow flex flex-col justify-end">
+                      <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors">Industry Certificates</h3>
+                      <p className="text-muted-foreground leading-relaxed mb-6">Earn verifiable, shareable certificates upon completing each learning path. Recognized by hiring managers and integrated with LinkedIn profiles.</p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><Award className="h-4 w-4 text-amber-500" /> 2,400+ issued</span>
+                        <span className="flex items-center gap-1.5 text-muted-foreground"><Users className="h-4 w-4 text-primary" /> 94% employer approval</span>
+                      </div>
+                    </div>
+                 </div>
+               </TiltCard>
+
+               {/* Side cards stack */}
+               <div className="grid gap-6">
+                 <TiltCard rotationIntensity={10} className="h-full">
+                   <div className="rounded-3xl border border-border/50 bg-card p-8 shadow-sm group hover:border-orange-500/30 hover:shadow-[0_12px_24px_-8px_rgba(249,115,22,0.1)] transition-all h-full relative overflow-hidden">
+                      <div className="absolute -right-8 -bottom-8 opacity-[0.04]"><Flame className="w-40 h-40" /></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-orange-400/20 to-red-500/20 flex items-center justify-center">
+                            <Flame className="w-6 h-6 text-orange-500 group-hover:animate-pulse" />
+                          </div>
+                          <div className="text-right ml-auto">
+                            <p className="text-2xl font-black text-foreground">12</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Day Streak</p>
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-lg mb-1">Learning Streaks</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">Build consistent habits with daily streak tracking. Unlock badges at 7, 30, and 100-day milestones.</p>
+                      </div>
+                   </div>
+                 </TiltCard>
+                 <TiltCard rotationIntensity={10} className="h-full">
+                   <div className="rounded-3xl border border-border/50 bg-card p-8 shadow-sm group hover:border-[#0077b5]/30 hover:shadow-[0_12px_24px_-8px_rgba(0,119,181,0.1)] transition-all h-full relative overflow-hidden">
+                      <div className="absolute -right-8 -bottom-8 opacity-[0.04]"><Linkedin className="w-40 h-40" /></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-[#0077b5]/10 flex items-center justify-center">
+                            <Linkedin className="w-6 h-6 text-[#0077b5]" />
+                          </div>
+                        </div>
+                        <h4 className="font-bold text-lg mb-1">1-Click Share</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">Instantly share certificates to LinkedIn, Twitter/X, or generate a unique public portfolio link.</p>
+                      </div>
+                   </div>
+                 </TiltCard>
+               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* The Ecosystem (FAQ & Community) */}
+        <section className="relative py-24 overflow-hidden">
+          <div className="absolute left-1/2 top-1/2 -z-10 h-[500px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/4 blur-[150px] pointer-events-none" />
+          
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
+            <ScrollReveal className="text-center mb-16">
+              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 mb-6 text-xs font-bold text-primary uppercase tracking-widest shadow-sm">
+                <MessageCircle className="h-4 w-4 mr-2" /> Community
+              </div>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Learn together,{" "}
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-rose-400">grow faster</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground max-w-2xl mx-auto text-lg">Free access doesn&apos;t mean learning alone. Join thousands of active learners.</p>
+            </ScrollReveal>
+            
+            <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
+               {/* Community Card */}
+               <ScrollReveal direction="left">
+                 <div className="rounded-3xl border border-border/50 bg-card/80 p-8 md:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden group hover:border-primary/30 transition-all duration-500">
+                    <div className="absolute -inset-px bg-linear-to-br from-primary/10 via-transparent to-rose-500/5 opacity-0 transition-opacity duration-700 group-hover:opacity-100 rounded-3xl" />
+                    <div className="absolute top-0 right-0 w-60 h-60 bg-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4" />
+                    
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-5 mb-8">
+                         <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary/20 to-rose-500/20 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                            <MessageCircle className="w-8 h-8 text-primary" />
+                         </div>
+                         <div>
+                           <h3 className="font-bold text-xl">Official Community</h3>
+                           <p className="text-sm font-medium text-emerald-500 flex items-center gap-2 mt-0.5">
+                             <span className="relative flex h-2.5 w-2.5">
+                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                             </span>
+                             1,402 currently online
+                           </p>
+                         </div>
+                      </div>
+                      
+                      {/* Mini avatars */}
+                      <div className="flex items-center mb-8">
+                        <div className="flex -space-x-3">
+                          {[...Array(5)].map((_, i) => (
+                            <div key={i} className={`w-10 h-10 rounded-full border-2 border-card bg-linear-to-br from-primary to-rose-500 flex items-center justify-center text-[10px] font-bold text-white shadow-sm`}>
+                              {["SC", "MJ", "ER", "AL", "JL"][i]}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="ml-4 text-sm text-muted-foreground font-medium">+2,847 members</span>
+                      </div>
+                      
+                      <AnimatedShimmerButton className="w-full bg-primary rounded-xl shadow-lg shadow-primary/20">
+                        <button className="w-full py-4 font-bold text-primary-foreground transition-colors hover:bg-primary/90 flex items-center justify-center gap-2">
+                          Join the Community <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </AnimatedShimmerButton>
+                    </div>
+                 </div>
+               </ScrollReveal>
+               
+               {/* FAQ */}
+               <ScrollReveal direction="right">
+                 <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-muted-foreground uppercase tracking-widest mb-6">Frequently Asked</h3>
+                    {[
+                      { q: "Is the platform actually free?", a: "Yes, 100%. All core curriculum, interactive quizzes, progress tracking, and standard certificates are completely open-access. No credit card required." },
+                      { q: "Do I need prior experience?", a: "Not at all. Our Foundation path starts from absolute zero. Each module builds on the previous, so you never feel lost or overwhelmed." },
+                      { q: "How are certificates verified?", a: "Each certificate includes a unique verification ID and public URL. Employers and recruiters can instantly verify your achievement." },
+                      { q: "Can I learn at my own pace?", a: "Absolutely. All content is self-paced with no deadlines. Pick up right where you left off, anytime." }
+                    ].map((faq, idx) => (
+                      <motion.div 
+                        key={idx} 
+                        whileHover={{ x: 4 }}
+                        className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm p-6 shadow-sm hover:border-primary/20 hover:shadow-md transition-all cursor-pointer group"
+                      >
+                        <h4 className="font-bold flex items-center justify-between gap-4">
+                           <span className="group-hover:text-primary transition-colors">{faq.q}</span>
+                           <ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-all shrink-0 group-hover:rotate-180" />
+                        </h4>
+                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                      </motion.div>
+                    ))}
+                 </div>
+               </ScrollReveal>
             </div>
           </div>
         </section>

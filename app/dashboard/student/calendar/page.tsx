@@ -1,15 +1,16 @@
-import React from "react";
-import CalendarComponent from "@/components/calendar/CalendarComponent";
+"use client";
 
-export const metadata = {
-  title: "My Calendar | Green Academy",
-  description: "View your personal learning schedule and upcoming events.",
-};
+import dynamic from "next/dynamic";
+
+const ScheduleCalendar = dynamic(
+  () => import("@/components/calendar/ScheduleCalendar"),
+  { ssr: false }
+);
 
 export default function StudentCalendarPage() {
   return (
     <div className="flex flex-col w-full h-full p-4 lg:p-8">
-      <CalendarComponent role="STUDENT" />
+      <ScheduleCalendar role="STUDENT" />
     </div>
   );
 }

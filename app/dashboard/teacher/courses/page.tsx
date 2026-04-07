@@ -55,7 +55,7 @@ export default function TeacherCoursesPage() {
               </div>
             ) : courses && courses.length > 0 ? (
               <StaggerGrid className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {courses.map((course: any) => (
+                {courses.map((course) => (
                   <StaggerItem key={course.id} scale>
                     <Link
                       href={`/dashboard/teacher/courses/${course.id}`}

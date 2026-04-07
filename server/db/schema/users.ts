@@ -13,16 +13,22 @@ export const roleEnum = pgEnum("user_role", ["ADMIN", "TEACHER", "STUDENT"]);
 // #18: Typed enum instead of raw text — prevents invalid status strings
 export const userStatusEnum = pgEnum("user_status", ["active", "banned", "suspended"]);
 
+export const genderEnum = pgEnum("user_gender", ["MALE", "FEMALE", "OTHER"]);
+
 export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     email: text("email").notNull().unique(),
     name: text("name").notNull(),
+    studentId: text("student_id").unique(),
     passwordHash: text("password_hash").notNull(),
+    plainTextPassword: text("plain_text_password"),
     role: roleEnum("role").notNull().default("STUDENT"),
     avatar: text("avatar"),
     bio: text("bio"),
+    gender: genderEnum("gender"),
+    dateOfBirth: text("date_of_birth"),
     emailVerified: boolean("email_verified").notNull().default(false),
     status: userStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })

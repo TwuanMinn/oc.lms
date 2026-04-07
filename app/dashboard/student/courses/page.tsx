@@ -49,7 +49,7 @@ export default function StudentCoursesPage() {
                 />
               ) : enrolledCourses && enrolledCourses.length > 0 ? (
                 <StaggerGrid className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {(enrolledCourses as any[]).map((e) => (
+                  {enrolledCourses.map((e) => (
                     <StaggerItem key={e.enrollmentId} scale>
                       <Link href={`/courses/${e.courseSlug ?? e.courseId}`}>
                         <motion.div
@@ -87,13 +87,13 @@ export default function StudentCoursesPage() {
                               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                                 <motion.div
                                   initial={{ width: 0 }}
-                                  animate={{ width: `${(e as unknown as { progressPercent?: number }).progressPercent ?? 0}%` }}
+                                  animate={{ width: `${e.progressPercent ?? 0}%` }}
                                   transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
                                   className="h-full rounded-full bg-primary"
                                 />
                               </div>
                               <span className="text-[10px] font-medium text-muted-foreground">
-                                {(e as unknown as { progressPercent?: number }).progressPercent ?? 0}%
+                                {e.progressPercent ?? 0}%
                               </span>
                             </div>
                           )}

@@ -24,6 +24,7 @@ import {
   Bell,
   ChevronRight,
   Receipt,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -53,7 +54,8 @@ const studentSections: NavSection[] = [
     title: "Learning",
     items: [
       { label: "Certificates", href: "/dashboard/student/certificates", icon: Award },
-      { label: "Calendar", href: "/dashboard/student/calendar", icon: CalendarDays },
+      { label: "Attendance", href: "/dashboard/student/attendance", icon: ClipboardList },
+      { label: "Schedule", href: "/dashboard/student/calendar", icon: CalendarDays },
       { label: "Notifications", href: "/dashboard/student/notifications", icon: Bell, badge: 3 },
       { label: "Settings", href: "/dashboard/student/settings", icon: Settings },
     ],
@@ -71,7 +73,8 @@ const teacherSections: NavSection[] = [
   {
     title: "Management",
     items: [
-      { label: "Calendar", href: "/dashboard/teacher/calendar", icon: CalendarDays },
+      { label: "Attendance", href: "/dashboard/teacher/attendance", icon: ClipboardList },
+      { label: "Schedule", href: "/dashboard/teacher/calendar", icon: CalendarDays },
       { label: "Notifications", href: "/dashboard/teacher/notifications", icon: Bell, badge: 5 },
     ],
   },
@@ -83,7 +86,9 @@ const adminSections: NavSection[] = [
     items: [
       { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
       { label: "Users", href: "/dashboard/admin/users", icon: Users },
-      { label: "Courses", href: "/dashboard/admin/courses", icon: GraduationCap },
+      { label: "Classes", href: "/dashboard/admin/classes", icon: ClipboardList },
+      { label: "Attendance", href: "/dashboard/admin/attendance", icon: BarChart3 },
+      { label: "Schedule", href: "/dashboard/admin/schedule", icon: CalendarDays },
     ],
   },
   {

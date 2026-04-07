@@ -175,9 +175,9 @@ export default function AdminOverviewPage() {
         />
         <BentoCard
           icon={BookOpen}
-          label="Courses"
+          label="Classes"
           value={data?.totalCourses ?? 0}
-          subtitle="Published on platform"
+          subtitle="Scheduled sessions"
           accent="hsl(142, 71%, 45%)"
           trend={{ value: "+3 new", positive: true }}
           sparkData={courseSparkData}
@@ -266,11 +266,11 @@ export default function AdminOverviewPage() {
             <div>
               <h2 className="text-sm font-semibold flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-emerald-500" />
-                Latest Published Courses
+                Latest Classes
               </h2>
-              <p className="text-xs text-muted-foreground">Recently published on the platform</p>
+              <p className="text-xs text-muted-foreground">Recently scheduled classes</p>
             </div>
-            <Link href="/dashboard/admin/courses" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+            <Link href="/dashboard/admin/classes" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
               View all →
             </Link>
           </div>

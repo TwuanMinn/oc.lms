@@ -1,0 +1,49 @@
+diff --git a/app/community/page.tsx b/app/community/page.tsx
+index 4c0d92e..0102d5f 100644
+--- a/app/community/page.tsx
++++ b/app/community/page.tsx
+@@ -130,7 +130,7 @@ export default function CommunityPage() {
+ 
+             {/* Brutalist Categories */}
+             <div className="flex flex-wrap gap-2 mt-4">
+-              {CATEGORIES.map((cat, i) => (
++              {CATEGORIES.map((cat) => (
+                 <button 
+                   key={cat}
+                   onClick={() => setActiveCategory(cat)}
+diff --git a/components/layout/Footer.tsx b/components/layout/Footer.tsx
+index d85383f..b964a57 100644
+--- a/components/layout/Footer.tsx
++++ b/components/layout/Footer.tsx
+@@ -1,7 +1,6 @@
+ "use client";
+ 
+ import Link from "next/link";
+-import Image from "next/image";
+ import { GraduationCap, Github, Twitter, Linkedin, Youtube, Heart } from "lucide-react";
+ import { motion } from "motion/react";
+ 
+diff --git a/components/shared/EmptyState.tsx b/components/shared/EmptyState.tsx
+index 4a48df4..9f93942 100644
+--- a/components/shared/EmptyState.tsx
++++ b/components/shared/EmptyState.tsx
+@@ -2,7 +2,6 @@
+ 
+ import { type LucideIcon, Inbox } from "lucide-react";
+ import { motion } from "motion/react";
+-import { springBounce } from "@/lib/motion";
+ 
+ interface EmptyStateProps {
+   icon?: LucideIcon;
+diff --git a/components/shared/ErrorState.tsx b/components/shared/ErrorState.tsx
+index 3dbe087..48c6c52 100644
+--- a/components/shared/ErrorState.tsx
++++ b/components/shared/ErrorState.tsx
+@@ -2,7 +2,6 @@
+ 
+ import { type LucideIcon, AlertTriangle, RefreshCw } from "lucide-react";
+ import { motion } from "motion/react";
+-import { springBounce } from "@/lib/motion";
+ 
+ interface ErrorStateProps {
+   icon?: LucideIcon;

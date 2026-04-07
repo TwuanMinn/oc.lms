@@ -35,7 +35,6 @@ export default function TeacherDashboard() {
   const { data: courses, isLoading } = trpc.course.myCoursesAsTeacher.useQuery();
 
   const typedCourses = (courses ?? []) as TeacherCourse[];
-  const totalCourses = typedCourses.length;
   const publishedCourses = typedCourses.filter((c) => c.status === "PUBLISHED").length;
   const totalStudents = typedCourses.reduce((sum, c) => sum + (c.enrollmentCount ?? 0), 0);
   const estimatedRevenue = totalStudents * 49; // Mocking variable ticket price for now

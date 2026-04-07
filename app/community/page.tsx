@@ -130,7 +130,7 @@ export default function CommunityPage() {
 
             {/* Brutalist Categories */}
             <div className="flex flex-wrap gap-2 mt-4">
-              {CATEGORIES.map((cat, i) => (
+              {CATEGORIES.map((cat) => (
                 <button 
                   key={cat}
                   onClick={() => setActiveCategory(cat)}

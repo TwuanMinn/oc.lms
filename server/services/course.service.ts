@@ -26,7 +26,7 @@ export async function createCourse(teacherId: string, input: CreateCourseInput) 
       description: input.description,
       categoryId: input.categoryId,
       thumbnail: input.thumbnail,
-      price: input.price ?? "0",
+
       teacherId,
     })
     .returning({
@@ -160,7 +160,7 @@ export async function getCatalog(input: CourseListInput) {
         title: courses.title,
         description: courses.description,
         thumbnail: courses.thumbnail,
-        price: courses.price,
+
         totalDuration: courses.totalDuration,
         teacherName: users.name,
         teacherAvatar: users.avatar,
@@ -197,7 +197,7 @@ export async function getCourseBySlug(slug: string, userId?: string) {
       title: courses.title,
       description: courses.description,
       thumbnail: courses.thumbnail,
-      price: courses.price,
+
       status: courses.status,
       totalDuration: courses.totalDuration,
       teacherId: courses.teacherId,

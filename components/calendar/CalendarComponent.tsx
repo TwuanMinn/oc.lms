@@ -18,6 +18,7 @@ import Link from "next/link";
 const locales = { "en-US": enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DnDCalendar = withDragAndDrop<CalendarEvent & { type?: string; color?: string; description?: string }>(Calendar as React.ComponentType<any>);
 
 type CustomEvent = CalendarEvent & {
@@ -86,6 +87,7 @@ export default function CalendarComponent({ role = "STUDENT" }: CalendarComponen
     setMounted(true);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const moveEvent = useCallback(({ event, start, end, isAllDay: droppedOnAllDaySlot }: any) => {
     if (role === "STUDENT") {
       toast.error("Read-only access. Only teachers can reschedule.");
@@ -101,6 +103,7 @@ export default function CalendarComponent({ role = "STUDENT" }: CalendarComponen
     });
   }, [role]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const resizeEvent = useCallback(({ event, start, end }: any) => {
     if (role === "STUDENT") {
       toast.error("Read-only access. Only teachers can change durations.");
@@ -114,6 +117,7 @@ export default function CalendarComponent({ role = "STUDENT" }: CalendarComponen
     toast.success(`"${event.title}" duration updated`);
   }, [role]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const newEvent = useCallback((slotInfo: any) => {
     if (role === "STUDENT") {
       toast.info("Select a date to view activity summary.");
@@ -133,6 +137,7 @@ export default function CalendarComponent({ role = "STUDENT" }: CalendarComponen
     }
   }, [role]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const CustomEventUI = ({ event }: any) => {
     const isPast = event.start && new Date(event.start) < new Date();
     

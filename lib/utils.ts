@@ -38,3 +38,14 @@ export function getInitials(name: string): string {
     .toUpperCase()
     .slice(0, 2);
 }
+
+/** Escape SQL LIKE metacharacters to prevent pattern injection */
+export function escapeLike(str: string): string {
+  return str.replace(/[%_\\]/g, "\\$&");
+}
+
+/** Safely cast raw SQL results to a typed array */
+export function typedRows<T>(rows: unknown): T[] {
+  if (!Array.isArray(rows)) return [];
+  return rows as T[];
+}

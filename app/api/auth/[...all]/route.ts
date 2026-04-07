@@ -54,9 +54,9 @@ async function withRoleCookie(request: Request, handler: (req: Request) => Promi
 }
 
 export async function GET(request: Request) {
-  return withRoleCookie(request, _GET);
+  return _GET(request);
 }
 
 export async function POST(request: Request) {
-  return withRoleCookie(request, _POST);
+  return _POST(request);
 }

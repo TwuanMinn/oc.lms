@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { Loader2, Users as UsersIcon, BookOpen, TrendingUp, CreditCard, Activity, ArrowUpRight, Award } from "lucide-react";
+import { Loader2, Users as UsersIcon, TrendingUp, Activity, Award, BookOpen } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -13,8 +13,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  AreaChart,
-  Area,
 } from "recharts";
 import { motion } from "motion/react";
 import { AnimatedPage } from "@/components/ui/animated";
@@ -42,13 +40,9 @@ export default function AdminAnalyticsPage() {
       enrollments: d.count,
     })) ?? [];
 
-  // Mock revenue data for the bento grid charts
-  const revenueData = chartData.map((d) => ({
-    date: d.date,
-    revenue: d.enrollments * 49, // Mock average ticket price
-  }));
-
-  const totalRevenue = data?.totalEnrollments ? data.totalEnrollments * 49 : 0;
+  const completionRate = data?.totalEnrollments && data.totalCourses
+    ? Math.round((data.totalCourses / data.totalEnrollments) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -59,13 +53,13 @@ export default function AdminAnalyticsPage() {
           <AnimatedPage>
             <PageHeader
               title="Platform Analytics"
-              description="Real-time breakdown of growth, revenue, and engagement"
+              description="Real-time breakdown of growth and engagement"
             />
 
             {/* BENTO GRID LAYOUT */}
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               
-              {/* Highlight Metric: Revenue */}
+              {/* Highlight Metric: Total Courses */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -77,33 +71,19 @@ export default function AdminAnalyticsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-primary" /> Max Revenue
+                        <BookOpen className="h-4 w-4 text-primary" /> Published Courses
                       </p>
                       <h2 className="text-4xl font-black tracking-tight text-foreground">
-                        ${totalRevenue.toLocaleString()}
+                        {data?.totalCourses ?? 0}
                       </h2>
                     </div>
-                    <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                      <ArrowUpRight className="h-6 w-6 text-emerald-500" />
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-primary" />
                     </div>
                   </div>
-                  <div className="mt-6 h-[80px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={revenueData}>
-                        <defs>
-                          <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <Tooltip
-                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
-                          itemStyle={{ color: "hsl(var(--primary))" }}
-                        />
-                        <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    {completionRate}% course-to-enrollment ratio
+                  </p>
                 </div>
               </motion.div>
 
@@ -121,9 +101,6 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold mt-4">{data?.totalUsers ?? 0}</h3>
-                  <p className="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" /> +12% this month
-                  </p>
                 </div>
               </motion.div>
 
@@ -140,9 +117,6 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold mt-4">{data?.totalEnrollments ?? 0}</h3>
-                  <p className="text-xs text-emerald-500 mt-2 font-medium flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" /> +8% this month
-                  </p>
                 </div>
               </motion.div>
 
@@ -195,7 +169,7 @@ export default function AdminAnalyticsPage() {
                   <Award className="h-4 w-4 text-amber-500" /> Leaderboard
                 </h3>
                 <div className="flex-1 space-y-4">
-                  {(data?.topCourses as any[])?.slice(0, 5).map((course: any, idx: number) => (
+                  {data?.topCourses?.slice(0, 5).map((course, idx: number) => (
                     <div key={course.courseId} className="flex items-center gap-3">
                       <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
                         idx === 0 ? "bg-amber-500/20 text-amber-500" :

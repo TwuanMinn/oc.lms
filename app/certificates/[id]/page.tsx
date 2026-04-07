@@ -6,12 +6,9 @@ import { Navbar } from "@/components/layout/Navbar";
 import { motion } from "motion/react";
 import { Award, Download, Calendar, Hash, BookOpen, Linkedin } from "lucide-react";
 import { AnimatedPage } from "@/components/ui/animated";
-// @ts-expect-error - no types available
 import { jsPDF } from "jspdf";
-// @ts-expect-error - no types available
 import { toPng } from "html-to-image";
 import { useState, useEffect } from "react";
-// @ts-expect-error - no types available
 import confetti from "canvas-confetti";
 
 function CertificateSkeleton() {
@@ -40,7 +37,7 @@ export default function CertificatePage() {
 
       const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-      const interval: any = setInterval(function() {
+      const interval: ReturnType<typeof setInterval> = setInterval(function() {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {

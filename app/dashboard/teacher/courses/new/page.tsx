@@ -29,7 +29,7 @@ export default function NewCoursePage() {
 
   const previewTitle = watch("title");
   const previewDesc = watch("description");
-  const previewPrice = watch("price");
+
   const previewThumbnail = watch("thumbnail");
 
   const createCourse = trpc.course.create.useMutation({
@@ -72,9 +72,9 @@ export default function NewCoursePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Form Side */}
                 <div className="lg:col-span-8 space-y-8 relative">
-                  <div className="bg-card rounded-[2rem] p-8 shadow-xl relative overflow-hidden border border-border/40">
+                  <div className="bg-card rounded-4xl p-8 shadow-xl relative overflow-hidden border border-border/40">
                     {/* Subtle Ghost Border */}
-                    <div className="absolute inset-0 border border-primary/5 rounded-[2rem] pointer-events-none" />
+                    <div className="absolute inset-0 border border-primary/5 rounded-4xl pointer-events-none" />
                     
                     <form id="create-course-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
                       <div className="space-y-2">
@@ -108,24 +108,6 @@ export default function NewCoursePage() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="block text-xs font-bold tracking-wide text-muted-foreground uppercase">
-                            Price (USD)
-                          </label>
-                          <div className="relative">
-                            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
-                            <input
-                              type="text"
-                              {...register("price")}
-                              className="w-full bg-secondary/20 border-none rounded-xl pl-10 pr-6 py-4 focus:ring-2 focus:ring-primary/40 focus:bg-background transition-all shadow-sm"
-                              placeholder="0.00"
-                            />
-                            {errors.price && (
-                              <p className="mt-1 text-xs text-destructive animate-pulse">{errors.price.message}</p>
-                            )}
-                          </div>
-                        </div>
-
                         <div className="space-y-2">
                           <label className="block text-xs font-bold tracking-wide text-muted-foreground uppercase">
                             Category
@@ -200,7 +182,7 @@ export default function NewCoursePage() {
 
                 {/* Preview Side (Editorial Touch) */}
                 <div className="hidden lg:col-span-4 lg:block sticky top-32">
-                  <div className="bg-card/50 backdrop-blur-md rounded-[2rem] p-6 border border-border/40 shadow-2xl">
+                  <div className="bg-card/50 backdrop-blur-md rounded-4xl p-6 border border-border/40 shadow-2xl">
                     <h4 className="font-bold text-foreground mb-6 flex items-center gap-2">
                       <Eye className="text-primary h-5 w-5" />
                       Live Preview
@@ -210,7 +192,7 @@ export default function NewCoursePage() {
                       key={previewTitle || previewThumbnail}
                       initial={{ scale: 0.98, opacity: 0.8 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="bg-card rounded-[1.5rem] overflow-hidden shadow-lg border border-border/50 hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 group"
+                      className="bg-card rounded-3xl overflow-hidden shadow-lg border border-border/50 hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 group"
                     >
                       <div className="h-48 bg-secondary/30 relative flex items-center justify-center overflow-hidden">
                         {previewThumbnail ? (
@@ -258,14 +240,14 @@ export default function NewCoursePage() {
                             </span>
                           </div>
                           <span className="text-base font-black text-foreground">
-                            ${previewPrice || "0.00"}
+                            Free
                           </span>
                         </div>
                       </div>
                     </motion.div>
                     
                     <div className="mt-8">
-                      <div className="bg-primary/5 p-5 rounded-[1.5rem] border-l-4 border-primary">
+                      <div className="bg-primary/5 p-5 rounded-3xl border-l-4 border-primary">
                         <h6 className="text-[11px] font-extrabold text-primary uppercase mb-2 tracking-wider flex items-center gap-1.5">
                           <Sparkles className="h-3 w-3" />
                           Pro Tip

@@ -4,7 +4,6 @@ import { eq, and, sql, isNull } from "drizzle-orm";
 import { db } from "@/server/db";
 import { enrollments, progress } from "@/server/db/schema/learning";
 import { courses, lessons } from "@/server/db/schema/courses";
-import { hasActiveSubscription } from "./billing.service";
 
 // #7: Validate course is PUBLISHED and not deleted before enrollment
 export async function enroll(userId: string, courseId: string) {
@@ -61,6 +60,7 @@ export async function unenroll(userId: string, courseId: string) {
   return { success: true };
 }
 
+// Platform is free — access is granted to enrolled users and free lessons
 export async function checkAccess(
   userId: string | undefined,
   lessonId: string
@@ -73,9 +73,6 @@ export async function checkAccess(
   if (!lesson) return false;
   if (lesson.isFree) return true;
   if (!userId) return false;
-
-  const hasSub = await hasActiveSubscription(userId);
-  if (hasSub) return true;
 
   const [enrollment] = await db
     .select({ id: enrollments.id })
@@ -90,8 +87,21 @@ export async function checkAccess(
   return !!enrollment;
 }
 
+export interface EnrolledCourse {
+  enrollmentId: string;
+  courseId: string;
+  enrolledAt: string | Date;
+  completedAt: string | Date | null;
+  courseTitle: string;
+  courseSlug: string | null;
+  courseThumbnail: string | null;
+  completedCount: number;
+  totalCount: number;
+  progressPercent: number;
+}
+
 // P1: Fixed N+1 — replaced Promise.all(enrolled.map(...)) with a single batch query
-export async function getEnrolledCourses(userId: string) {
+export async function getEnrolledCourses(userId: string): Promise<EnrolledCourse[]> {
   const rows = await db.execute(sql`
     SELECT
       e.id AS "enrollmentId",
@@ -123,7 +133,7 @@ export async function getEnrolledCourses(userId: string) {
     ORDER BY e.enrolled_at DESC
   `);
 
-  return [...(rows as unknown as Record<string, unknown>[])];
+  return [...(rows as unknown as EnrolledCourse[])];
 }
 
 // #4: Replaced raw sql`deletedAt IS NULL` and NOT IN subquery with Drizzle ORM helpers
@@ -135,7 +145,7 @@ export async function getRecommendedCourses(userId: string) {
       title: courses.title,
       description: courses.description,
       thumbnail: courses.thumbnail,
-      price: courses.price,
+
       enrollmentCount: sql<number>`(SELECT count(*) FROM enrollments WHERE enrollments.course_id = courses.id)`,
     })
     .from(courses)

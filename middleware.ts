@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/courses", "/pricing", "/api/auth", "/api/trpc", "/api/inngest", "/api/health", "/help"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/courses", "/api/auth", "/api/trpc", "/api/inngest", "/api/health", "/help"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/"));
 }
 
-// ── S3: Simple in-memory rate limiter for auth endpoints ──
+// In-memory rate limiter — sufficient for single-instance dev/staging.
+// TODO (Production): Replace with Redis/Upstash for multi-instance deployments.
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 20; // 20 requests per minute for auth

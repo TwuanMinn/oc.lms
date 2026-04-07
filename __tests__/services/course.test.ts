@@ -81,7 +81,6 @@ describe("CourseService", () => {
         title: "Test Course",
         description: "A test",
         categoryId: "cat-1",
-        price: "49.99",
       });
 
       expect(mockInsert).toHaveBeenCalled();

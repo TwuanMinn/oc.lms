@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   loginSchema,
-  registerSchema,
   type LoginInput,
-  type RegisterInput,
 } from "@/lib/validations/user";
-import { signIn, signUp } from "@/lib/auth-client";
+import { signIn } from "@/lib/auth-client";
 import {
   Loader2,
   Github,
@@ -44,12 +43,6 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "motion/react";
 
-const PASSWORD_RULES = [
-  { label: "8+ characters", test: (v: string) => v.length >= 8 },
-  { label: "Uppercase letter", test: (v: string) => /[A-Z]/.test(v) },
-  { label: "Number", test: (v: string) => /[0-9]/.test(v) },
-  { label: "Special character", test: (v: string) => /[^a-zA-Z0-9]/.test(v) },
-];
 
 /* ================================================================
    FLOATING SHAPES
@@ -429,7 +422,10 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [isDark, setIsDark] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && theme === "dark";
   const [isFormLoading, setIsFormLoading] = useState(false);
   const [existingUser, setExistingUser] = useState<string | null>(null);
   const router = useRouter();
@@ -477,7 +473,7 @@ export default function AuthPage() {
   }, [bgHue]);
 
   return (
-    <div className={isDark ? "dark" : ""}>
+    <>
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 bg-transparent transition-colors duration-500">
 
         {/* Success overlay */}
@@ -616,7 +612,7 @@ export default function AuthPage() {
           <motion.button
             whileHover={{ scale: 1.1, rotate: 15 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setIsDark(!isDark)}
+            onClick={() => setTheme(isDark ? "light" : "dark")}
             className="w-11 h-11 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center
                        text-slate-600 dark:text-yellow-400 hover:shadow-lg transition-all duration-200 cursor-pointer
                        border border-slate-200 dark:border-slate-600"
@@ -668,7 +664,6 @@ export default function AuthPage() {
           )}
         </AnimatePresence>
 
-        {/* ─── AUTH CARD (Desktop) with parallax tilt ─── */}
         <TiltCard className="relative w-full max-w-[820px] min-h-[540px] rounded-[28px] overflow-hidden shadow-2xl shadow-black/10 dark:shadow-black/40 hidden md:block">
           {/* Loading progress bar */}
           <LoadingBar isLoading={isFormLoading} />
@@ -679,9 +674,9 @@ export default function AuthPage() {
               <SignInForm onSuccess={(msg) => handleSuccess(msg)} onLoadingChange={setIsFormLoading} />
             </div>
 
-            {/* Right half: SIGN UP */}
-            <div className="absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center px-8 py-5 overflow-y-auto">
-              <SignUpForm onSuccess={(msg) => handleSuccess(msg)} onLoadingChange={setIsFormLoading} />
+            {/* Right half: Forgot Password form (revealed when overlay slides) */}
+            <div className="absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center px-8 py-8">
+              <ForgotPasswordForm onBack={() => setIsSignUp(false)} />
             </div>
 
             {/* ─── SLIDING OVERLAY PANEL ─── */}
@@ -701,7 +696,7 @@ export default function AuthPage() {
                   <AnimatePresence mode="wait">
                     {!isSignUp ? (
                       <motion.div
-                        key="go-signup"
+                        key="go-forgot"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -715,7 +710,7 @@ export default function AuthPage() {
                         >
                           <Image
                             src="/images/auth-signup.png"
-                            alt="Create your account"
+                            alt="Forgot password?"
                             width={220}
                             height={220}
                             className="w-[200px] h-[200px] object-cover rounded-full drop-shadow-2xl"
@@ -729,10 +724,10 @@ export default function AuthPage() {
                             backgroundSize: "400% 100%",
                           }}
                         >
-                          <TypewriterText text="Create Account!" />
+                          <TypewriterText text="Forgot Password?" />
                         </h2>
                         <p className="text-sm text-white/80 mb-6 max-w-[200px]">
-                          Sign up if you still don&apos;t have an account …
+                          No worries! Reset your password in seconds …
                         </p>
                         <motion.button
                           type="button"
@@ -742,7 +737,7 @@ export default function AuthPage() {
                           className="px-8 py-2.5 rounded-full border-2 border-white/60 text-sm font-bold tracking-widest text-white
                                      transition-all duration-300 cursor-pointer backdrop-blur-sm uppercase"
                         >
-                          Sign Up
+                          Reset
                         </motion.button>
                       </motion.div>
                     ) : (
@@ -778,7 +773,7 @@ export default function AuthPage() {
                           <TypewriterText text="Welcome Back!" />
                         </h2>
                         <p className="text-sm text-white/80 mb-6 max-w-[200px]">
-                          Sign in here if you already have an account
+                          Remember your password? Sign in here
                         </p>
                         <motion.button
                           type="button"
@@ -827,7 +822,7 @@ export default function AuthPage() {
                     : "text-slate-400 hover:text-slate-600"
                 }`}
               >
-                Sign Up
+                Forgot Password
               </button>
             </div>
             <div className="px-6 py-8">
@@ -837,8 +832,8 @@ export default function AuthPage() {
                     <SignInForm onSuccess={(msg) => handleSuccess(msg)} onLoadingChange={setIsFormLoading} />
                   </motion.div>
                 ) : (
-                  <motion.div key="m-signup" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-                    <SignUpForm onSuccess={(msg) => handleSuccess(msg)} onLoadingChange={setIsFormLoading} />
+                  <motion.div key="m-forgot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+                    <ForgotPasswordForm onBack={() => setIsSignUp(false)} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -847,7 +842,7 @@ export default function AuthPage() {
         </div>
 
       </div>
-    </div>
+    </>
   );
 }
 
@@ -1018,55 +1013,41 @@ function SignInForm({ onSuccess, onLoadingChange }: { onSuccess: (msg: string) =
 }
 
 /* ================================================================
-   SIGN UP FORM
+   FORGOT PASSWORD FORM
    ================================================================ */
-function SignUpForm({ onSuccess, onLoadingChange }: { onSuccess: (msg: string) => void; onLoadingChange: (v: boolean) => void }) {
-  const router = useRouter();
+function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSent, setIsSent] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const nameRef = useRef<HTMLInputElement | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
-  });
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
 
-  const passwordValue = watch("password") ?? "";
-  const confirmValue = watch("confirmPassword") ?? "";
-  const passedCount = PASSWORD_RULES.filter((r) => r.test(passwordValue)).length;
-  const strengthPercent = (passedCount / PASSWORD_RULES.length) * 100;
-  const passwordsMatch = confirmValue.length > 0 && passwordValue === confirmValue;
-  const passwordsMismatch = confirmValue.length > 0 && passwordValue !== confirmValue;
-
-  const { ref: nameFormRef, ...nameRest } = register("name");
-
-  async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
-    onLoadingChange(true);
     setHasError(false);
+
     try {
-      const result = await signUp.email({ name: data.name, email: data.email, password: data.password });
-      if (result.error) {
-        toast.error(result.error.message ?? "Registration failed");
-        setHasError(true);
+      const res = await fetch("/api/auth/forget-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, redirectTo: "/reset-password" }),
+      });
+
+      if (res.ok) {
+        setIsSent(true);
+        toast.success("Reset link sent! Check your email.");
       } else {
-        onSuccess("Account created! 🎉");
-        toast.success("Welcome aboard!");
-        setTimeout(() => {
-          router.push("/dashboard/student");
-          router.refresh();
-        }, 1800);
+        // Still show success to avoid email enumeration
+        setIsSent(true);
+        toast.success("If this email exists, a reset link was sent.");
       }
     } catch {
-      toast.error("Something went wrong");
+      toast.error("Something went wrong. Try again.");
       setHasError(true);
     } finally {
       setIsLoading(false);
-      onLoadingChange(false);
     }
   }
 
@@ -1079,7 +1060,7 @@ function SignUpForm({ onSuccess, onLoadingChange }: { onSuccess: (msg: string) =
     >
       <StaggerContainer className="w-full flex flex-col items-center">
         <StaggerItem>
-          <div className="flex flex-col items-center mb-2">
+          <div className="flex flex-col items-center mb-3">
             <div className="flex items-center gap-2">
               <GraduationCap className="w-6 h-6 text-sky-500" />
               <span className="text-sm font-bold text-sky-600 tracking-wide">GREEN ACADEMY</span>
@@ -1089,138 +1070,80 @@ function SignUpForm({ onSuccess, onLoadingChange }: { onSuccess: (msg: string) =
         </StaggerItem>
 
         <StaggerItem>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-3">Sign Up</h1>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+            {isSent ? "Check Your Email" : "Reset Password"}
+          </h1>
         </StaggerItem>
 
         <StaggerItem>
-          <div className="flex items-center gap-4 mb-2">
-            <SocialIcon label="GitHub"><Github className="w-4 h-4" /></SocialIcon>
-            <SocialIcon label="Google">
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-            </SocialIcon>
-            <SocialIcon label="SSO"><Globe className="w-4 h-4" /></SocialIcon>
-          </div>
+          <p className="text-xs text-slate-400 mb-5 text-center max-w-[260px]">
+            {isSent
+              ? "We've sent a password reset link to your email address."
+              : "Enter your email and we'll send you a reset link"}
+          </p>
         </StaggerItem>
 
-        <StaggerItem>
-          <p className="text-xs text-slate-400 mb-3">Or use your Email for registration</p>
-        </StaggerItem>
-
-        <StaggerItem className="w-full">
-          <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-2.5">
-            <div>
-              <IconInput
-                icon={User}
-                id="signup-name"
-                type="text"
-                placeholder="Full Name"
-                autoComplete="name"
-                ref={(e) => {
-                  nameFormRef(e);
-                  nameRef.current = e;
-                }}
-                {...nameRest}
-              />
-              {errors.name && <p className="mt-1 text-xs text-red-500 pl-4">{errors.name.message}</p>}
+        {isSent ? (
+          <StaggerItem className="w-full">
+            <div className="flex flex-col items-center gap-4">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"
+              >
+                <Mail className="w-8 h-8 text-emerald-500" />
+              </motion.div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-[240px]">
+                Didn&apos;t get the email? Check your spam folder or{" "}
+                <button
+                  type="button"
+                  onClick={() => { setIsSent(false); setEmail(""); }}
+                  className="text-sky-500 font-semibold hover:underline cursor-pointer"
+                >
+                  try again
+                </button>
+              </p>
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-xs text-sky-500 font-semibold hover:underline cursor-pointer mt-2"
+              >
+                ← Back to Sign In
+              </button>
             </div>
-
-            <div>
-              <IconInput
-                icon={Mail}
-                id="signup-email"
-                type="email"
-                placeholder="Email"
-                autoComplete="email"
-                {...register("email")}
-              />
-              {errors.email && <p className="mt-1 text-xs text-red-500 pl-4">{errors.email.message}</p>}
-            </div>
-
-            <div>
-              <IconInput
-                icon={Lock}
-                id="signup-password"
-                type="password"
-                placeholder="Password"
-                autoComplete="new-password"
-                showToggle
-                showCapsWarning
-                {...register("password")}
-              />
-              {errors.password && <p className="mt-1 text-xs text-red-500 pl-4">{errors.password.message}</p>}
-
-              {passwordValue.length > 0 && (
-                <div className="mt-1.5 px-4">
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-600">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${strengthPercent}%` }}
-                      transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                      className={`h-full rounded-full ${
-                        strengthPercent <= 25 ? "bg-red-400" : strengthPercent <= 50 ? "bg-orange-400" : strengthPercent <= 75 ? "bg-amber-400" : "bg-emerald-400"
-                      }`}
-                    />
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-                    {PASSWORD_RULES.map((rule) => {
-                      const passed = rule.test(passwordValue);
-                      return (
-                        <span key={rule.label} className={`flex items-center gap-1 text-[10px] transition-colors ${passed ? "text-emerald-500" : "text-slate-300 dark:text-slate-600"}`}>
-                          {passed ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
-                          {rule.label}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="relative">
+          </StaggerItem>
+        ) : (
+          <StaggerItem className="w-full">
+            <form onSubmit={handleSubmit} className="w-full space-y-3">
+              <div>
                 <IconInput
-                  icon={ShieldCheck}
-                  id="signup-confirm-password"
-                  type="password"
-                  placeholder="Confirm Password"
-                  autoComplete="new-password"
-                  showToggle
-                  showCapsWarning
-                  {...register("confirmPassword")}
+                  icon={Mail}
+                  id="forgot-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 />
-                {confirmValue.length > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className={`absolute right-12 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center ${
-                      passwordsMatch ? "bg-emerald-100 dark:bg-emerald-900" : "bg-red-100 dark:bg-red-900"
-                    }`}
-                  >
-                    {passwordsMatch ? <Check className="w-3 h-3 text-emerald-600" /> : <X className="w-3 h-3 text-red-500" />}
-                  </motion.div>
-                )}
               </div>
-              {errors.confirmPassword && <p className="mt-1 text-xs text-red-500 pl-4">{errors.confirmPassword.message}</p>}
-              {passwordsMismatch && !errors.confirmPassword && <p className="mt-1 text-xs text-red-400 pl-4">Passwords don&apos;t match</p>}
-            </div>
 
-            <ShimmerButton type="submit" disabled={isLoading} isLoading={isLoading}>
-              Sign Up
-            </ShimmerButton>
+              <ShimmerButton type="submit" disabled={isLoading || !email.trim()} isLoading={isLoading}>
+                Send Reset Link
+              </ShimmerButton>
 
-            <p className="text-[10px] text-slate-400 text-center leading-relaxed pt-0.5">
-              By signing up, you agree to our{" "}
-              <Link href="/terms" className="text-sky-500 hover:underline">Terms</Link>
-              {" "}&{" "}
-              <Link href="/privacy" className="text-sky-500 hover:underline">Privacy Policy</Link>
-            </p>
-          </form>
-        </StaggerItem>
+              <p className="text-center">
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="text-xs text-sky-500 font-semibold hover:underline cursor-pointer"
+                >
+                  ← Back to Sign In
+                </button>
+              </p>
+            </form>
+          </StaggerItem>
+        )}
       </StaggerContainer>
     </motion.div>
   );

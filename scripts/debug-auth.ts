@@ -21,10 +21,12 @@ async function testAuth() {
         if (prop === 'insert') {
           return (...args: any[]) => {
             output += `  DB.insert called on table\n`;
+            // @ts-ignore — debug proxy intercept
             const builder = originalInsert(...args);
             const originalValues = builder.values.bind(builder);
             builder.values = (...vArgs: any[]) => {
               output += `  .values(${JSON.stringify(vArgs[0])?.substring(0, 300)})\n`;
+              // @ts-ignore — debug proxy intercept
               return originalValues(...vArgs);
             };
             return builder;

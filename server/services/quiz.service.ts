@@ -1,6 +1,6 @@
 import "server-only";
 import { TRPCError } from "@trpc/server";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { db } from "@/server/db";
 import { quizzes, questions, quizAttempts } from "@/server/db/schema/quizzes";
 import { lessons } from "@/server/db/schema/courses";
@@ -12,7 +12,11 @@ export async function getQuizForStudent(quizId: string) {
     .select({
       id: quizzes.id,
       title: quizzes.title,
+      instructions: quizzes.instructions,
       passingScore: quizzes.passingScore,
+      timeLimitMinutes: quizzes.timeLimitMinutes,
+      availableFrom: quizzes.availableFrom,
+      availableUntil: quizzes.availableUntil,
       lessonId: quizzes.lessonId,
     })
     .from(quizzes)
@@ -20,6 +24,21 @@ export async function getQuizForStudent(quizId: string) {
 
   if (!quiz) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Quiz not found" });
+  }
+
+  // Check availability window
+  const now = new Date();
+  if (quiz.availableFrom && now < quiz.availableFrom) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `This test opens on ${quiz.availableFrom.toLocaleDateString()}`,
+    });
+  }
+  if (quiz.availableUntil && now > quiz.availableUntil) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This test is no longer available",
+    });
   }
 
   const quizQuestions = await db
@@ -60,6 +79,19 @@ export async function gradeQuiz(
 
   if (!quiz) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Quiz not found" });
+  }
+
+  // Enforce no retakes — check if student already took this quiz
+  const [existingAttempt] = await db
+    .select({ id: quizAttempts.id })
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, input.quizId)));
+
+  if (existingAttempt) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You have already taken this test. Retakes are not allowed.",
+    });
   }
 
   const quizQuestions = await db
@@ -120,9 +152,16 @@ export async function gradeQuiz(
   return { ...attempt, feedback };
 }
 
-// #11: Verify the teacher owns the parent course before creating a quiz
 export async function createQuiz(
-  input: { lessonId: string; title: string; passingScore?: number },
+  input: {
+    lessonId: string;
+    title: string;
+    instructions?: string;
+    passingScore?: number;
+    timeLimitMinutes?: number;
+    availableFrom?: string;
+    availableUntil?: string;
+  },
   teacherId: string,
   role: string
 ) {
@@ -139,7 +178,15 @@ export async function createQuiz(
 
   const [quiz] = await db
     .insert(quizzes)
-    .values(input)
+    .values({
+      lessonId: input.lessonId,
+      title: input.title,
+      instructions: input.instructions || null,
+      passingScore: input.passingScore ?? 70,
+      timeLimitMinutes: input.timeLimitMinutes || null,
+      availableFrom: input.availableFrom ? new Date(input.availableFrom) : null,
+      availableUntil: input.availableUntil ? new Date(input.availableUntil) : null,
+    })
     .returning({ id: quizzes.id, title: quizzes.title });
   return quiz;
 }

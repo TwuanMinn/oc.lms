@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+
 import { trpc } from "@/lib/trpc/client";
-import { useAuth } from "@/lib/hooks/useAuth";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { Navbar } from "@/components/layout/Navbar";
 import { CourseCard } from "@/components/course/CourseCard";
@@ -11,12 +10,10 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
 import { Footer } from "@/components/layout/Footer";
-import { Search, BookOpen, Filter, Check, Crown, Zap, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { Search, BookOpen, Filter, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { AnimatedPage, StaggerGrid, StaggerItem, ScrollReveal } from "@/components/ui/animated";
+import { AnimatedPage, StaggerGrid, StaggerItem } from "@/components/ui/animated";
 import { springBounce } from "@/lib/motion";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
 
@@ -27,9 +24,6 @@ export default function CoursesPage() {
   const [page, setPage] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
-
   const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
@@ -55,28 +49,8 @@ export default function CoursesPage() {
     sort,
     categoryId: category || undefined,
   });
-  const { data: plans } = trpc.billing.plans.useQuery();
-  const { data: subscription } = trpc.billing.mySubscription.useQuery(
-    undefined,
-    { enabled: isAuthenticated }
-  );
 
-  const subscribeMutation = trpc.billing.subscribe.useMutation({
-    onSuccess: () => {
-      toast.success("Subscription activated! Full access unlocked 🎉");
-      router.refresh();
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const hasActiveSub = !!subscription;
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0;
-
-  const iconMap: Record<string, typeof Zap> = {
-    monthly: Zap,
-    yearly: Crown,
-    lifetime: Sparkles,
-  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -118,81 +92,6 @@ export default function CoursesPage() {
                     </label>
                   ))}
                 </div>
-              </div>
-
-              {/* Plans block */}
-              <div className="rounded-xl border border-border/50 bg-card p-5">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                  Access Plans
-                </h3>
-                {hasActiveSub ? (
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-center">
-                    <Check className="mx-auto h-5 w-5 text-emerald-400" />
-                    <p className="mt-1 text-sm font-semibold text-emerald-400">
-                      Active: {subscription.planName}
-                    </p>
-                    <p className="text-xs text-emerald-400/70">
-                      Full access unlocked
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {plans?.map((plan) => {
-                      const Icon = iconMap[plan.slug] ?? Zap;
-                      return (
-                        <motion.button
-                          key={plan.id}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            if (!isAuthenticated) {
-                              router.push("/register");
-                              return;
-                            }
-                            subscribeMutation.mutate({ planId: plan.id });
-                          }}
-                          disabled={subscribeMutation.isPending}
-                          className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${
-                            plan.isPopular
-                              ? "border-primary/40 bg-primary/5 hover:bg-primary/10"
-                              : "border-border/50 hover:bg-accent/30"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
-                              plan.isPopular ? "bg-primary/10" : "bg-muted"
-                            }`}
-                          >
-                            <Icon
-                              className={`h-4 w-4 ${
-                                plan.isPopular
-                                  ? "text-primary"
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm font-semibold">
-                                {plan.name}
-                              </span>
-                              {plan.isPopular && (
-                                <span className="rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-primary-foreground">
-                                  BEST
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-lg font-bold">
-                                ${Number(plan.price).toFixed(0)}
-                              </span>
-                            </div>
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             </motion.div>
           </aside>
@@ -293,7 +192,7 @@ export default function CoursesPage() {
                       className="flex items-center gap-2 rounded-lg border border-input bg-background py-2 pl-3 pr-4 text-sm outline-none ring-ring transition-all hover:bg-accent focus:ring-2 focus:shadow-lg focus:shadow-primary/5"
                     >
                       <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{category ? categories.find((c: any) => c.id === category)?.name : "All categories"}</span>
+                      <span>{category ? categories.find((c: { id: string; name: string }) => c.id === category)?.name : "All categories"}</span>
                     </button>
                     <AnimatePresence>
                       {isDropdownOpen && (
@@ -356,30 +255,6 @@ export default function CoursesPage() {
               </div>
             </motion.div>
 
-            {/* Mobile pricing banner */}
-            {!hasActiveSub && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 lg:hidden"
-              >
-                <div>
-                  <p className="text-sm font-semibold">
-                    Unlock all courses
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Starting at ${plans?.[0] ? Number(plans[0].price).toFixed(0) : "..."}/mo
-                  </p>
-                </div>
-                <Link
-                  href="/pricing"
-                  className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
-                >
-                  View plans <ArrowRight className="h-3 w-3" />
-                </Link>
-              </motion.div>
-            )}
-
             <AnimatePresence mode="wait">
               {isLoading ? (
                 <motion.div
@@ -419,7 +294,6 @@ export default function CoursesPage() {
                           title={course.title}
                           description={course.description}
                           thumbnail={course.thumbnail}
-                          price={course.price}
                           totalDuration={course.totalDuration}
                           teacherName={course.teacherName}
                           categoryName={course.categoryName}

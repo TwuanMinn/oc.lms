@@ -3,7 +3,6 @@
 import { motion, useInView, AnimatePresence } from "motion/react";
 import { useRef, useState, useEffect, type ReactNode } from "react";
 import {
-  fadeInUp,
   staggerContainer,
   staggerItem,
   staggerItemScale,

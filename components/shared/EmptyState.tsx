@@ -2,7 +2,6 @@
 
 import { type LucideIcon, Inbox } from "lucide-react";
 import { motion } from "motion/react";
-import { springBounce } from "@/lib/motion";
 
 interface EmptyStateProps {
   icon?: LucideIcon;

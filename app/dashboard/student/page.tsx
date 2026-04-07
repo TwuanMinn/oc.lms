@@ -84,9 +84,9 @@ export default function StudentDashboard() {
   const { data: certCount } = trpc.certificate.count.useQuery();
   const { data: recommended } = trpc.enrollment.recommended.useQuery();
 
-  const activeCourses: any[] = enrolledCourses?.filter((e) => !e.completedAt) ?? [];
-  const completedCourses: any[] = enrolledCourses?.filter((e) => e.completedAt) ?? [];
-  const lastActive: any = activeCourses[0];
+  const activeCourses = enrolledCourses?.filter((e) => !e.completedAt) ?? [];
+  const completedCourses = enrolledCourses?.filter((e) => e.completedAt) ?? [];
+  const lastActive = activeCourses[0] as (typeof activeCourses)[number] | undefined;
 
   return (
     <div className="min-h-screen">
@@ -124,7 +124,7 @@ export default function StudentDashboard() {
                     Ready to level up, {user?.name?.split(" ")[0] ?? "Student"}?
                   </h1>
                   <p className="text-base text-muted-foreground max-w-xl leading-relaxed">
-                    You're currently dominating <strong className="text-foreground">{activeCourses.length} active courses</strong>. 
+                    You&apos;re currently dominating <strong className="text-foreground">{activeCourses.length} active courses</strong>. 
                     {streakData && streakData.currentStreak > 0 ? ` Don't lose your ${streakData.currentStreak}-day learning streak!` : ` Start learning today to build your streak.`}
                   </p>
                 </div>
@@ -246,7 +246,7 @@ export default function StudentDashboard() {
                 />
               ) : enrolledCourses && enrolledCourses.length > 0 ? (
                 <StaggerGrid className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {(enrolledCourses as any[]).map((e: any) => (
+                  {enrolledCourses.map((e) => (
                     <StaggerItem key={e.enrollmentId} scale>
                       <Link href={`/courses/${e.courseSlug ?? e.courseId}`}>
                         <motion.div
@@ -359,7 +359,7 @@ export default function StudentDashboard() {
                           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                             <span>{course.enrollmentCount} students</span>
                             <span className="font-semibold text-foreground">
-                              {!course.price || course.price === "0" || course.price === "0.00" ? "Free" : `$${course.price}`}
+                              Free
                             </span>
                           </div>
                         </motion.div>

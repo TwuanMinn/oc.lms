@@ -48,3 +48,7 @@ next-env.d.ts
 
 # debug output files
 *-output.txt
+lint_output.json
+ts_errors.txt
+temp-design.md
+calendar-feature.md

@@ -111,7 +111,6 @@ export default function CourseDetailPage() {
     (sum, mod) => sum + mod.lessons.length,
     0
   );
-  const isFree = !course.price || course.price === "0" || course.price === "0.00";
 
   function handleEnroll() {
     if (!isAuthenticated) {
@@ -273,11 +272,6 @@ export default function CourseDetailPage() {
                     transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.5 }}
                     className="text-3xl font-bold"
                   >
-                    {isFree ? (
-                      <span className="text-emerald-500">Free</span>
-                    ) : (
-                      `$${course.price}`
-                    )}
                   </motion.div>
 
                   {course.isEnrolled ? (
@@ -302,7 +296,7 @@ export default function CourseDetailPage() {
                       {enroll.isPending && (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       )}
-                      {isFree ? "Enroll for free" : `Enroll — $${course.price}`}
+                      Enroll
                     </motion.button>
                   )}
 
@@ -384,17 +378,12 @@ export default function CourseDetailPage() {
                                     className="flex items-center justify-between px-4 py-2.5 transition-colors hover:bg-accent/20"
                                   >
                                     <div className="flex items-center gap-3">
-                                      {lesson.isFree || course.isEnrolled ? (
+                                      {course.isEnrolled ? (
                                         <PlayCircle className="h-4 w-4 text-primary" />
                                       ) : (
                                         <Lock className="h-4 w-4 text-muted-foreground" />
                                       )}
                                       <span className="text-sm">{lesson.title}</span>
-                                      {lesson.isFree && !course.isEnrolled && (
-                                        <span className="rounded bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
-                                          FREE
-                                        </span>
-                                      )}
                                     </div>
                                     <span className="text-xs text-muted-foreground">
                                       {formatDuration(lesson.duration)}

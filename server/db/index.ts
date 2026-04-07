@@ -7,19 +7,22 @@ import * as courses from "./schema/courses";
 import * as learning from "./schema/learning";
 import * as quizzes from "./schema/quizzes";
 import * as social from "./schema/social";
-import * as billing from "./schema/billing";
-import * as platform from "./schema/platform";
 
-// P3: Connection pool configuration
+import * as platform from "./schema/platform";
+import * as attendance from "./schema/attendance";
+import * as schedules from "./schema/schedules";
+
+// Optimized for Supabase cloud DB
 const client = postgres(env.DATABASE_URL, {
   prepare: false,
   max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
+  idle_timeout: 60,
+  connect_timeout: 30,
+  ssl: env.DATABASE_URL.includes("supabase.co") ? "require" : undefined,
 });
 
 export const db = drizzle(client, {
-  schema: { ...users, ...courses, ...learning, ...quizzes, ...social, ...billing, ...platform },
+  schema: { ...users, ...courses, ...learning, ...quizzes, ...social, ...platform, ...attendance, ...schedules },
 });
 
 export type DB = typeof db;

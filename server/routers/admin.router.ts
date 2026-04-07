@@ -11,7 +11,7 @@ export const adminRouter = router({
   getUsers: adminProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).default(20),
+        limit: z.number().min(1).max(500).default(20),
         offset: z.number().min(0).default(0),
         role: z.enum(["ADMIN", "TEACHER", "STUDENT"]).optional(),
         search: z.string().optional(),
@@ -57,12 +57,28 @@ export const adminRouter = router({
       z.object({
         name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.string().email("Invalid email address"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
+        password: z.string().min(6, "Password must be at least 6 characters").default("Admin123!"),
         role: z.enum(["ADMIN", "TEACHER", "STUDENT"]).default("STUDENT"),
+        gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
+        dateOfBirth: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       return adminService.createUser(input);
+    }),
+
+  updateUser: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        name: z.string().min(2).optional(),
+        email: z.string().email().optional(),
+        gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
+        dateOfBirth: z.string().nullable().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return adminService.updateUser(input);
     }),
 
   getCourses: adminProcedure
@@ -145,4 +161,74 @@ export const adminRouter = router({
   getAnalytics: adminProcedure.query(async () => {
     return adminService.getAnalytics();
   }),
+
+  // ── CSV Import ──
+  importCsv: adminProcedure
+    .input(z.object({
+      rows: z.array(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        role: z.string().min(1),
+        studentId: z.string(),
+        password: z.string().min(1),
+      })),
+    }))
+    .mutation(async ({ input }) => {
+      return adminService.importUsersFromCsv(input.rows);
+    }),
+
+  // ── Course creation with enrollments ──
+  createCourseWithEnrollments: adminProcedure
+    .input(z.object({
+      title: z.string().min(1),
+      courseCode: z.string().min(1),
+      description: z.string().optional(),
+      teacherId: z.string().uuid(),
+      startDate: z.string().optional(),
+      studentIds: z.array(z.string().uuid()),
+    }))
+    .mutation(async ({ input }) => {
+      return adminService.createCourseWithEnrollments(input);
+    }),
+
+  // ── Weekly Progress ──
+  setCourseWeeks: adminProcedure
+    .input(z.object({
+      courseId: z.string().uuid(),
+      weeks: z.array(z.object({
+        weekNumber: z.number().min(1),
+        label: z.string().min(1),
+        description: z.string().optional(),
+      })),
+    }))
+    .mutation(async ({ input }) => {
+      return adminService.setCourseWeeks(input.courseId, input.weeks);
+    }),
+
+  setActiveWeek: adminProcedure
+    .input(z.object({
+      courseId: z.string().uuid(),
+      weekNumber: z.number().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      return adminService.setActiveWeek(input.courseId, input.weekNumber);
+    }),
+
+  getCourseWeeks: adminProcedure
+    .input(z.object({ courseId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      return adminService.getCourseWeeks(input.courseId);
+    }),
+
+  // ── Attendance Report ──
+  getAttendanceReport: adminProcedure
+    .input(z.object({
+      courseId: z.string().uuid().optional(),
+      studentUserId: z.string().uuid().optional(),
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+    }))
+    .query(async ({ input }) => {
+      return adminService.getAttendanceReport(input);
+    }),
 });

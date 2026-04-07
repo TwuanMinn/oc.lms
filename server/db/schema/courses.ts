@@ -8,6 +8,7 @@ import {
   timestamp,
   pgEnum,
   index,
+  unique,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
@@ -33,13 +34,10 @@ export const courses = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     slug: text("slug").notNull().unique(),
     title: text("title").notNull(),
+    courseCode: text("course_code").unique(),
     description: text("description"),
     thumbnail: text("thumbnail"),
-    price: numeric("price", { precision: 10, scale: 2 })
-      .notNull()
-      .default("0"),
     status: courseStatusEnum("status").notNull().default("DRAFT"),
-    // Migration: ALTER TABLE courses ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT false;
     approved: boolean("approved").notNull().default(false),
     teacherId: uuid("teacher_id")
       .notNull()
@@ -47,6 +45,7 @@ export const courses = pgTable(
     categoryId: uuid("category_id").references(() => categories.id, {
       onDelete: "set null",
     }),
+    startDate: timestamp("start_date", { withTimezone: true }),
     totalDuration: integer("total_duration").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -116,10 +115,34 @@ export const lessons = pgTable(
   ]
 );
 
+// Weekly progress structure defined by admin
+export const courseWeeks = pgTable(
+  "course_weeks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    courseId: uuid("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    weekNumber: integer("week_number").notNull(),
+    label: text("label").notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("uq_course_week").on(table.courseId, table.weekNumber),
+    index("idx_course_weeks_course").on(table.courseId),
+  ]
+);
+
 export type Category = typeof categories.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type Module = typeof modules.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;
+export type CourseWeek = typeof courseWeeks.$inferSelect;
 export type NewCourse = typeof courses.$inferInsert;
 export type NewModule = typeof modules.$inferInsert;
 export type NewLesson = typeof lessons.$inferInsert;
+export type NewCourseWeek = typeof courseWeeks.$inferInsert;

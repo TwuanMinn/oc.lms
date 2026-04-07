@@ -5,7 +5,7 @@ export const createCourseSchema = z.object({
   description: z.string().max(5000).optional(),
   categoryId: z.string().uuid().optional(),
   thumbnail: z.string().url().optional(),
-  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format").optional(),
+
 });
 
 export const updateCourseSchema = z.object({
@@ -14,7 +14,7 @@ export const updateCourseSchema = z.object({
   description: z.string().max(5000).optional(),
   categoryId: z.string().uuid().nullable().optional(),
   thumbnail: z.string().url().nullable().optional(),
-  price: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
 });
 

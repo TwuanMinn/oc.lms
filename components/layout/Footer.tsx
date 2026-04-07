@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { GraduationCap, Github, Twitter, Linkedin, Youtube, Heart } from "lucide-react";
 import { motion } from "motion/react";
 
 const PLATFORM_LINKS = [
   { label: "Browse courses", href: "/courses" },
   { label: "Teach on Green Academy", href: "/register" },
-  { label: "Pricing", href: "/pricing" },
   { label: "Dashboard", href: "/dashboard/student" },
 ];
 

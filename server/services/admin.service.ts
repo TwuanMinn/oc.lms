@@ -2,10 +2,53 @@ import "server-only";
 import { eq, isNull, sql, count, desc, and, or, ilike, gte } from "drizzle-orm";
 import { db } from "@/server/db";
 import { users, accounts } from "@/server/db/schema/users";
-import { courses, categories } from "@/server/db/schema/courses";
+import { courses, categories, courseWeeks } from "@/server/db/schema/courses";
 import { enrollments } from "@/server/db/schema/learning";
+import { classeSessions, attendanceRecords } from "@/server/db/schema/attendance";
 import { platformSettings } from "@/server/db/schema/platform";
 import { TRPCError } from "@trpc/server";
+import { escapeLike, typedRows } from "@/lib/utils";
+
+// ── Typed interfaces for raw SQL returns ──
+
+export interface AdminCourseRow {
+  id: string;
+  title: string;
+  slug: string;
+  thumbnail: string | null;
+
+  status: string;
+  approved: boolean;
+  teacherName: string | null;
+  categoryName: string | null;
+  createdAt: Date;
+  enrollmentCount: number;
+}
+
+export interface TransactionRow {
+  id: string;
+  student_name: string;
+  student_email: string;
+  teacher_name: string;
+  course_title: string;
+  amount: number;
+  platform_fee: number;
+  teacher_payout: number;
+  date: Date;
+  status: string;
+}
+
+interface TransactionSummary {
+  total_revenue: number;
+  total_platform_fees: number;
+  total_teacher_payouts: number;
+  total_count: number;
+}
+
+interface MonthlyRevenue { month: string; revenue: number }
+interface TopCourse { title: string; enrollment_count: number }
+interface UserDistribution { role: string; count: number }
+interface AnalyticsTopCourse { courseId: string; title: string; enrollmentCount: number }
 
 // ── OVERVIEW ──
 
@@ -27,7 +70,7 @@ export async function getOverview() {
       .from(courses)
       .where(and(isNull(courses.deletedAt), eq(courses.status, "PUBLISHED"))),
     db.execute(
-      sql`SELECT COALESCE(SUM(CAST(c.price AS numeric)), 0)::float AS total FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE c.deleted_at IS NULL`
+      sql`SELECT 0::float AS total FROM enrollments e JOIN courses c ON c.id = e.course_id WHERE c.deleted_at IS NULL`
     ),
     db
       .select({ count: count() })
@@ -83,10 +126,11 @@ export async function getUsers(input: {
   const conditions = [isNull(users.deletedAt)];
   if (input.role) conditions.push(eq(users.role, input.role));
   if (input.search) {
+    const safe = escapeLike(input.search);
     conditions.push(
       or(
-        ilike(users.name, `%${input.search}%`),
-        ilike(users.email, `%${input.search}%`)
+        ilike(users.name, `%${safe}%`),
+        ilike(users.email, `%${safe}%`)
       )!
     );
   }
@@ -99,10 +143,13 @@ export async function getUsers(input: {
         email: users.email,
         name: users.name,
         role: users.role,
+        gender: users.gender,
+        dateOfBirth: users.dateOfBirth,
         avatar: users.avatar,
         status: users.status,
         createdAt: users.createdAt,
         emailVerified: users.emailVerified,
+        plainTextPassword: users.plainTextPassword,
       })
       .from(users)
       .where(whereClause)
@@ -167,6 +214,8 @@ export async function createUser(input: {
   email: string;
   password: string;
   role: "ADMIN" | "TEACHER" | "STUDENT";
+  gender?: "MALE" | "FEMALE" | "OTHER";
+  dateOfBirth?: string;
 }) {
   const { hashPassword } = await import("better-auth/crypto");
   const passwordHash = await hashPassword(input.password);
@@ -177,7 +226,10 @@ export async function createUser(input: {
       name: input.name,
       email: input.email,
       passwordHash,
+      plainTextPassword: input.password,
       role: input.role,
+      gender: input.gender ?? null,
+      dateOfBirth: input.dateOfBirth ?? null,
       emailVerified: true,
     })
     .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
@@ -190,6 +242,28 @@ export async function createUser(input: {
   });
 
   return newUser;
+}
+
+export async function updateUser(input: {
+  userId: string;
+  name?: string;
+  email?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER" | null;
+  dateOfBirth?: string | null;
+}) {
+  const { userId, ...fields } = input;
+  const updateData: Record<string, unknown> = {};
+  if (fields.name !== undefined) updateData.name = fields.name;
+  if (fields.email !== undefined) updateData.email = fields.email;
+  if (fields.gender !== undefined) updateData.gender = fields.gender;
+  if (fields.dateOfBirth !== undefined) updateData.dateOfBirth = fields.dateOfBirth;
+
+  const [updated] = await db
+    .update(users)
+    .set(updateData)
+    .where(eq(users.id, userId))
+    .returning({ id: users.id, name: users.name, email: users.email });
+  return updated;
 }
 
 // ── COURSES ──
@@ -207,7 +281,7 @@ export async function getCourses(input: {
   const [courseList, totalResult] = await Promise.all([
     db.execute(sql`
       SELECT
-        c.id, c.title, c.slug, c.thumbnail, c.price, c.status, c.approved,
+        c.id, c.title, c.slug, c.thumbnail, c.status, c.approved,
         u.name AS "teacherName",
         cat.name AS "categoryName",
         c.created_at AS "createdAt",
@@ -226,7 +300,7 @@ export async function getCourses(input: {
   ]);
 
   return {
-    courses: [...(courseList as unknown as Record<string, unknown>[])],
+    courses: typedRows<AdminCourseRow>(courseList),
     total: totalResult[0]?.count ?? 0,
   };
 }
@@ -288,9 +362,9 @@ export async function getTransactions(input: {
       s.email AS student_email,
       t.name AS teacher_name,
       c.title AS course_title,
-      CAST(c.price AS float) AS amount,
-      ROUND(CAST(c.price AS numeric) * 0.10, 2)::float AS platform_fee,
-      ROUND(CAST(c.price AS numeric) * 0.90, 2)::float AS teacher_payout,
+      0::float AS amount,
+      0::float AS platform_fee,
+      0::float AS teacher_payout,
       e.enrolled_at AS date,
       'completed' AS status
     FROM enrollments e
@@ -304,19 +378,17 @@ export async function getTransactions(input: {
 
   const summary = await db.execute(sql`
     SELECT
-      COALESCE(SUM(CAST(c.price AS float)), 0) AS total_revenue,
-      ROUND(COALESCE(SUM(CAST(c.price AS numeric) * 0.10), 0), 2)::float AS total_platform_fees,
-      ROUND(COALESCE(SUM(CAST(c.price AS numeric) * 0.90), 0), 2)::float AS total_teacher_payouts,
+      0::float AS total_revenue,
+      0::float AS total_platform_fees,
+      0::float AS total_teacher_payouts,
       COUNT(*)::int AS total_count
     FROM enrollments e
     JOIN courses c ON c.id = e.course_id
     WHERE c.deleted_at IS NULL ${dateFilter}
   `);
 
-  const rows = [...(transactions as unknown as Record<string, unknown>[])];
-  const summaryRow = [
-    ...(summary as unknown as Record<string, unknown>[]),
-  ][0] ?? {
+  const rows = typedRows<TransactionRow>(transactions);
+  const summaryRow = typedRows<TransactionSummary>(summary)[0] ?? {
     total_revenue: 0,
     total_platform_fees: 0,
     total_teacher_payouts: 0,
@@ -334,7 +406,7 @@ export async function getReportData() {
       db.execute(sql`
       SELECT
         TO_CHAR(e.enrolled_at, 'YYYY-MM') AS month,
-        COALESCE(SUM(CAST(c.price AS float)), 0) AS revenue
+        0::float AS revenue
       FROM enrollments e
       JOIN courses c ON c.id = e.course_id
       WHERE e.enrolled_at >= NOW() - INTERVAL '12 months'
@@ -362,15 +434,9 @@ export async function getReportData() {
     ]);
 
   return {
-    monthlyRevenue: [
-      ...(monthlyRevenueRaw as unknown as Record<string, unknown>[]),
-    ],
-    topCourses: [
-      ...(topCoursesRaw as unknown as Record<string, unknown>[]),
-    ],
-    userDistribution: [
-      ...(userDistributionRaw as unknown as Record<string, unknown>[]),
-    ],
+    monthlyRevenue: typedRows<MonthlyRevenue>(monthlyRevenueRaw),
+    topCourses: typedRows<TopCourse>(topCoursesRaw),
+    userDistribution: typedRows<UserDistribution>(userDistributionRaw),
   };
 }
 
@@ -437,6 +503,219 @@ export async function getAnalytics() {
     totalCourses: totalCourses[0]?.count ?? 0,
     totalEnrollments: totalEnrollments[0]?.count ?? 0,
     enrollmentsByDay,
-    topCourses: [...(topCourses as unknown as Record<string, unknown>[])],
+    topCourses: typedRows<AnalyticsTopCourse>(topCourses),
   };
+}
+
+// ── CSV IMPORT ──
+
+interface CsvRow {
+  name: string;
+  email: string;
+  role: string;
+  studentId: string;
+  password: string;
+}
+
+export async function importUsersFromCsv(rows: CsvRow[]) {
+  const { hashPassword } = await import("better-auth/crypto");
+  const results: { created: number; errors: string[] } = { created: 0, errors: [] };
+
+  for (const row of rows) {
+    try {
+      const role = row.role.toUpperCase() as "ADMIN" | "TEACHER" | "STUDENT";
+      if (!["ADMIN", "TEACHER", "STUDENT"].includes(role)) {
+        results.errors.push(`Invalid role for ${row.email}: ${row.role}`);
+        continue;
+      }
+
+      const passwordHash = await hashPassword(row.password);
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          name: row.name,
+          email: row.email.toLowerCase(),
+          studentId: row.studentId || null,
+          passwordHash,
+          plainTextPassword: row.password,
+          role,
+          emailVerified: true,
+        })
+        .onConflictDoNothing({ target: users.email })
+        .returning({ id: users.id });
+
+      if (newUser) {
+        await db.insert(accounts).values({
+          userId: newUser.id,
+          accountId: newUser.id,
+          providerId: "credential",
+          password: passwordHash,
+        });
+        results.created++;
+      } else {
+        results.errors.push(`${row.email} already exists`);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      results.errors.push(`${row.email}: ${msg}`);
+    }
+  }
+
+  return results;
+}
+
+// ── COURSE CREATION WITH ENROLLMENTS ──
+
+export async function createCourseWithEnrollments(input: {
+  title: string;
+  courseCode: string;
+  description?: string;
+  teacherId: string;
+  startDate?: string;
+  studentIds: string[];
+}) {
+  const slug = input.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    + "-" + Date.now().toString(36);
+
+  const [course] = await db
+    .insert(courses)
+    .values({
+      title: input.title,
+      slug,
+      courseCode: input.courseCode,
+      description: input.description || null,
+      teacherId: input.teacherId,
+      startDate: input.startDate ? new Date(input.startDate) : null,
+      status: "PUBLISHED",
+      approved: true,
+    })
+    .returning();
+
+  // Auto-enroll students
+  if (input.studentIds.length > 0) {
+    await db.insert(enrollments).values(
+      input.studentIds.map((userId) => ({
+        userId,
+        courseId: course.id,
+      }))
+    );
+  }
+
+  return course;
+}
+
+// ── WEEKLY PROGRESS ──
+
+export async function setCourseWeeks(
+  courseId: string,
+  weeks: { weekNumber: number; label: string; description?: string }[]
+) {
+  // Delete existing weeks for this course then insert fresh
+  await db.delete(courseWeeks).where(eq(courseWeeks.courseId, courseId));
+
+  if (weeks.length === 0) return [];
+
+  const inserted = await db
+    .insert(courseWeeks)
+    .values(
+      weeks.map((w) => ({
+        courseId,
+        weekNumber: w.weekNumber,
+        label: w.label,
+        description: w.description || null,
+        isActive: w.weekNumber === 1,
+      }))
+    )
+    .returning();
+
+  return inserted;
+}
+
+export async function setActiveWeek(courseId: string, weekNumber: number) {
+  // Deactivate all weeks
+  await db
+    .update(courseWeeks)
+    .set({ isActive: false })
+    .where(eq(courseWeeks.courseId, courseId));
+
+  // Activate the selected week
+  await db
+    .update(courseWeeks)
+    .set({ isActive: true })
+    .where(
+      and(eq(courseWeeks.courseId, courseId), eq(courseWeeks.weekNumber, weekNumber))
+    );
+
+  return { success: true };
+}
+
+export async function getCourseWeeks(courseId: string) {
+  return db
+    .select()
+    .from(courseWeeks)
+    .where(eq(courseWeeks.courseId, courseId))
+    .orderBy(courseWeeks.weekNumber);
+}
+
+// ── ATTENDANCE REPORT ──
+
+interface AttendanceReportRow {
+  studentName: string;
+  studentId: string | null;
+  studentEmail: string;
+  sessionTitle: string;
+  classCode: string;
+  courseTitle: string;
+  scheduledAt: Date;
+  status: string;
+}
+
+export async function getAttendanceReport(filters: {
+  courseId?: string;
+  studentUserId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const conditions: ReturnType<typeof sql>[] = [];
+
+  if (filters.courseId) {
+    conditions.push(sql`cs.course_id = ${filters.courseId}`);
+  }
+  if (filters.studentUserId) {
+    conditions.push(sql`ar.student_id = ${filters.studentUserId}`);
+  }
+  if (filters.dateFrom) {
+    conditions.push(sql`cs.scheduled_at >= ${filters.dateFrom}::timestamptz`);
+  }
+  if (filters.dateTo) {
+    conditions.push(sql`cs.scheduled_at <= ${filters.dateTo}::timestamptz`);
+  }
+
+  const whereClause = conditions.length > 0
+    ? sql`WHERE ${sql.join(conditions, sql` AND `)}`
+    : sql``;
+
+  const rows = await db.execute(sql`
+    SELECT
+      u.name AS "studentName",
+      u.student_id AS "studentId",
+      u.email AS "studentEmail",
+      cs.title AS "sessionTitle",
+      cs.class_code AS "classCode",
+      c.title AS "courseTitle",
+      cs.scheduled_at AS "scheduledAt",
+      COALESCE(ar.status, 'UNMARKED') AS status
+    FROM class_sessions cs
+    JOIN courses c ON c.id = cs.course_id
+    CROSS JOIN enrollments e ON e.course_id = cs.course_id
+    JOIN users u ON u.id = e.user_id
+    LEFT JOIN attendance_records ar ON ar.session_id = cs.id AND ar.student_id = u.id
+    ${whereClause}
+    ORDER BY cs.scheduled_at DESC, u.name ASC
+  `);
+
+  return typedRows<AttendanceReportRow>(rows);
 }

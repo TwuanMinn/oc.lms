@@ -9,7 +9,8 @@ import { reviewRouter } from "./review.router";
 import { notificationRouter } from "./notification.router";
 import { searchRouter } from "./search.router";
 import { adminRouter } from "./admin.router";
-import { billingRouter } from "./billing.router";
+import { attendanceRouter } from "./attendance.router";
+import { scheduleRouter } from "./schedule.router";
 import { certificateRouter } from "./certificate.router";
 
 export const appRouter = router({
@@ -23,8 +24,10 @@ export const appRouter = router({
   notification: notificationRouter,
   search: searchRouter,
   admin: adminRouter,
-  billing: billingRouter,
+  attendance: attendanceRouter,
+  schedule: scheduleRouter,
   certificate: certificateRouter,
 });
 
 export type AppRouter = typeof appRouter;
+

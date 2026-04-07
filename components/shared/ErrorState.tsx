@@ -2,7 +2,6 @@
 
 import { type LucideIcon, AlertTriangle, RefreshCw } from "lucide-react";
 import { motion } from "motion/react";
-import { springBounce } from "@/lib/motion";
 
 interface ErrorStateProps {
   icon?: LucideIcon;

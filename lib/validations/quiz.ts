@@ -8,7 +8,11 @@ const optionSchema = z.object({
 export const createQuizSchema = z.object({
   lessonId: z.string().uuid(),
   title: z.string().min(1).max(200),
+  instructions: z.string().max(2000).optional(),
   passingScore: z.number().min(0).max(100).default(70),
+  timeLimitMinutes: z.number().min(1).max(480).optional(),
+  availableFrom: z.string().optional(),
+  availableUntil: z.string().optional(),
 });
 
 export const createQuestionSchema = z.object({

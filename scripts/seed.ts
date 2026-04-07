@@ -135,7 +135,7 @@ async function seed() {
       slug: "complete-typescript-masterclass",
       description:
         "Master TypeScript from basics to advanced patterns. Learn generics, utility types, decorators, and build production-ready applications.",
-      price: "0",
+
       status: "PUBLISHED",
       approved: true,
       teacherId: teacher.id,
@@ -212,7 +212,7 @@ async function seed() {
       slug: "nextjs-full-stack-development",
       description:
         "Build production-ready full-stack applications with Next.js 15, React Server Components, Server Actions, and modern deployment strategies.",
-      price: "29.99",
+
       status: "PUBLISHED",
       approved: true,
       teacherId: teacher.id,
@@ -305,7 +305,7 @@ async function seed() {
         slug: "python-data-science",
         description:
           "Learn Python data analysis with Pandas, NumPy, and Matplotlib. Build real-world data pipelines and visualizations.",
-        price: "19.99",
+
         status: "PUBLISHED",
         approved: true,
         teacherId: teacher2.id,
@@ -376,7 +376,7 @@ async function seed() {
         slug: "modern-ui-ux-design",
         description:
           "Master the fundamentals of user interface and user experience design. Learn Figma, design systems, accessibility, and user research.",
-        price: "0",
+
         status: "PUBLISHED",
         approved: true,
         teacherId: designTeacherId,
@@ -446,4 +446,7 @@ async function seed() {
   console.log("   Student: student@lms.dev / Admin123!");
 }
 
-seed().catch(console.error);
+seed().catch((err) => {
+  console.error("❌ Seed failed:", err);
+  process.exit(1);
+});

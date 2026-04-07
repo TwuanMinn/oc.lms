@@ -19,7 +19,6 @@ import {
 import { motion } from "motion/react";
 import { AnimatedPage, ScrollReveal, StaggerGrid, StaggerItem, AnimatedShimmerButton } from "@/components/ui/animated";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function HelpCenterPage() {
   return (
@@ -156,7 +155,7 @@ export default function HelpCenterPage() {
                     desc: "Interact safely and professionally with peers.",
                     articles: 6
                   }
-                ].map((item, i) => (
+                ].map((item) => (
                   <StaggerItem key={item.title}>
                     <div className="group flex h-full flex-col rounded-3xl bg-card p-8 shadow-sm border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-300">
                       <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl ${item.bgClass}`}>
@@ -190,7 +189,7 @@ export default function HelpCenterPage() {
                   { title: "How to apply for an Instructor License?", updated: "Updated 2 days ago", read: "5 min read" },
                   { title: "Integrating Green Academy with LinkedIn Learning", updated: "Updated 1 week ago", read: "10 min read" },
                   { title: "Managing Team Subscriptions for Businesses", updated: "Updated 3 days ago", read: "8 min read" },
-                ].map((article, i) => (
+                ].map((article) => (
                   <motion.div 
                     key={article.title}
                     whileHover={{ scale: 1.01, x: 4 }}

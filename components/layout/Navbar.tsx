@@ -16,13 +16,12 @@ import { springBounce } from "@/lib/motion";
 const navLinks = [
   { label: "Courses", href: "/courses" },
   { label: "Community", href: "/community" },
-  { label: "Pricing", href: "/pricing" },
   { label: "Help", href: "/help" },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, isAuthenticated, dashboardPath } = useAuth();
+  const { isAuthenticated, dashboardPath } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (

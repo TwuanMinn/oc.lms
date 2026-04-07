@@ -15,7 +15,6 @@ interface CourseCardProps {
   title: string;
   description?: string | null;
   thumbnail?: string | null;
-  price?: string;
   totalDuration?: number;
   teacherName?: string | null;
   categoryName?: string | null;
@@ -31,7 +30,6 @@ export function CourseCard({
   title,
   description,
   thumbnail,
-  price = "0",
   totalDuration = 0,
   teacherName,
   categoryName,
@@ -40,8 +38,6 @@ export function CourseCard({
   progressPercent,
   showProgress = false,
 }: CourseCardProps) {
-  const isFree = !price || price === "0" || price === "0.00";
-
   return (
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
@@ -71,11 +67,6 @@ export function CourseCard({
           {showProgress && progressPercent !== undefined && (
             <div className="absolute right-3 top-3">
               <ProgressRing percent={progressPercent} size={48} />
-            </div>
-          )}
-          {isFree && (
-            <div className="absolute left-3 top-3 rounded-md bg-success/90 px-2 py-0.5 text-xs font-bold text-white">
-              FREE
             </div>
           )}
         </div>
@@ -117,11 +108,6 @@ export function CourseCard({
               )}
             </div>
           </div>
-          {!isFree && (
-            <div className="mt-2 text-sm font-bold text-primary">
-              ${price}
-            </div>
-          )}
         </div>
       </Link>
     </motion.div>
