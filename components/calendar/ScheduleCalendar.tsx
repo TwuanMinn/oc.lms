@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import {
   Users, GraduationCap, Plus, Pencil, Trash2, X,
-  MapPin, School, Loader2, Clock, BookOpen, Calendar,
+  MapPin, School, Loader2, Clock, BookOpen, Calendar, FlaskConical, Presentation, Video, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc/client";
@@ -23,6 +23,8 @@ interface Cell {
   courseTitle: string;
   teacherName: string;
   room: string;
+  group: string;
+  classType: string;
   day: Day;
   periodId: number;
   color: string;
@@ -39,7 +41,7 @@ export default function ScheduleCalendar({ role }: { role?: string }) {
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ courseId: "", day: "Monday" as Day, periodId: 1, room: "" });
+  const [formData, setFormData] = useState({ courseId: "", day: "Monday" as Day, periodId: 1, room: "", classType: "LECTURE" as "LECTURE" | "LAB" | "MAKEUP_CLASS" | "ONLINE_SESSION" });
 
   const utils = trpc.useUtils();
   const coursesQ = trpc.schedule.allCourses.useQuery();
@@ -74,7 +76,9 @@ export default function ScheduleCalendar({ role }: { role?: string }) {
         courseCode: course?.courseCode || "",
         courseTitle: course?.title || (ev as any).courseTitle || ev.title,
         teacherName: course?.teacherName || "",
-        room: (ev as any).room || "", day, periodId,
+        room: (ev as any).room || "",
+        group: (course as any)?.group || "",
+        classType: (ev as any).classType || "LECTURE", day, periodId,
         color: getCourseColor(ev.courseId),
       };
     }).filter(Boolean) as Cell[];
@@ -88,20 +92,20 @@ export default function ScheduleCalendar({ role }: { role?: string }) {
 
   const openAdd = (day?: Day, periodId?: number) => {
     setFormMode("add"); setEditingEventId(null);
-    setFormData({ courseId: selectedCourseId || coursesQ.data?.[0]?.id || "", day: day || "Monday", periodId: periodId || 1, room: "" });
+    setFormData({ courseId: selectedCourseId || coursesQ.data?.[0]?.id || "", day: day || "Monday", periodId: periodId || 1, room: "", classType: "LECTURE" });
   };
   const openEdit = (cell: Cell) => {
     setFormMode("edit"); setEditingEventId(cell.eventId);
-    setFormData({ courseId: cell.courseId, day: cell.day, periodId: cell.periodId, room: cell.room });
+    setFormData({ courseId: cell.courseId, day: cell.day, periodId: cell.periodId, room: cell.room, classType: (cell.classType as "LECTURE" | "LAB" | "MAKEUP_CLASS" | "ONLINE_SESSION") || "LECTURE" });
   };
   const saveSlot = () => {
     const course = coursesQ.data?.find(c => c.id === formData.courseId);
     if (!course) { toast.error("Select a course"); return; }
     const { start, end } = buildEventDates(formData.day, formData.periodId);
     if (formMode === "add") {
-      createM.mutate({ courseId: formData.courseId, title: course.title, room: formData.room || undefined, eventType: "LIVE_CLASS", startTime: start.toISOString(), endTime: end.toISOString() });
+      createM.mutate({ courseId: formData.courseId, title: course.title, room: formData.room || undefined, classType: formData.classType, eventType: "LIVE_CLASS", startTime: start.toISOString(), endTime: end.toISOString() });
     } else if (editingEventId) {
-      updateM.mutate({ eventId: editingEventId, room: formData.room || undefined, startTime: start.toISOString(), endTime: end.toISOString() });
+      updateM.mutate({ eventId: editingEventId, room: formData.room || undefined, classType: formData.classType, startTime: start.toISOString(), endTime: end.toISOString() });
     }
   };
   const deleteSlot = () => { if (editingEventId) deleteM.mutate({ eventId: editingEventId }); };
@@ -314,10 +318,29 @@ function TimetableGrid({ cells, onCellClick, onEmptyClick, interactive, showClas
                     <div className="slot-block" style={{ '--slot-color': cell.color } as React.CSSProperties}>
                       <div className="slot-accent" style={{ backgroundColor: cell.color }} />
                       <div className="slot-content">
+                        {cell.classType && (
+                          <span className={cn("slot-type-badge",
+                            cell.classType === "LAB" ? "slot-type-lab" :
+                            cell.classType === "MAKEUP_CLASS" ? "slot-type-makeup" :
+                            cell.classType === "ONLINE_SESSION" ? "slot-type-online" :
+                            "slot-type-lecture"
+                          )}>
+                            {cell.classType === "LAB" && <FlaskConical className="w-2.5 h-2.5" />}
+                            {cell.classType === "LECTURE" && <Presentation className="w-2.5 h-2.5" />}
+                            {cell.classType === "MAKEUP_CLASS" && <RefreshCw className="w-2.5 h-2.5" />}
+                            {cell.classType === "ONLINE_SESSION" && <Video className="w-2.5 h-2.5" />}
+                            {cell.classType === "MAKEUP_CLASS" ? "Make-up" : cell.classType === "ONLINE_SESSION" ? "Online" : cell.classType}
+                          </span>
+                        )}
                         {cell.courseCode && (
                           <span className="slot-code" style={{ color: cell.color, background: `color-mix(in srgb, ${cell.color} 12%, transparent)` }}>{cell.courseCode}</span>
                         )}
                         <span className="slot-title" style={{ color: cell.color }}>{cell.courseTitle}</span>
+                        {cell.group && (
+                          <span className="slot-group">
+                            <Users className="w-2.5 h-2.5" />Group {cell.group}
+                          </span>
+                        )}
                         {(showTeacher || (!showClass)) && cell.teacherName && (
                           <span className="slot-meta">{cell.teacherName}</span>
                         )}
@@ -346,7 +369,7 @@ function TimetableGrid({ cells, onCellClick, onEmptyClick, interactive, showClas
 // ═══════════════════════════════════════
 
 function SlotForm({ formData, setFormData, courses, mode, onSave, onDelete, onCancel, loading }: {
-  formData: { courseId: string; day: Day; periodId: number; room: string };
+  formData: { courseId: string; day: Day; periodId: number; room: string; classType: "LECTURE" | "LAB" | "MAKEUP_CLASS" | "ONLINE_SESSION" };
   setFormData: React.Dispatch<React.SetStateAction<typeof formData>>;
   courses: any[];
   mode: "add" | "edit";
@@ -361,7 +384,7 @@ function SlotForm({ formData, setFormData, courses, mode, onSave, onDelete, onCa
         </div>
         <h4 className="text-sm font-bold text-slate-700">{mode === "add" ? "Schedule New Class" : "Edit Class"}</h4>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div>
           <label className="tt-label">Course</label>
           <select value={formData.courseId} onChange={e => setFormData(p => ({ ...p, courseId: e.target.value }))} className="tt-select w-full">
@@ -383,6 +406,15 @@ function SlotForm({ formData, setFormData, courses, mode, onSave, onDelete, onCa
         <div>
           <label className="tt-label">Room</label>
           <input type="text" value={formData.room} onChange={e => setFormData(p => ({ ...p, room: e.target.value }))} placeholder="e.g. Room 101" className="tt-input" />
+        </div>
+        <div>
+          <label className="tt-label">Type</label>
+          <select value={formData.classType} onChange={e => setFormData(p => ({ ...p, classType: e.target.value as "LECTURE" | "LAB" | "MAKEUP_CLASS" | "ONLINE_SESSION" }))} className="tt-select w-full">
+            <option value="LECTURE">Lecture</option>
+            <option value="LAB">Lab</option>
+            <option value="MAKEUP_CLASS">Make-up Class</option>
+            <option value="ONLINE_SESSION">Online Session</option>
+          </select>
         </div>
       </div>
       <div className="flex gap-2 pt-1">
@@ -788,6 +820,18 @@ const STYLES = `
   color: #94a3b8;
   font-weight: 500;
 }
+.slot-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  width: fit-content;
+}
 .slot-room {
   display: flex;
   align-items: center;
@@ -796,5 +840,37 @@ const STYLES = `
   color: #94a3b8;
   font-weight: 500;
   margin-top: auto;
+}
+.slot-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+.slot-type-lecture {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.slot-type-lab {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+.slot-type-makeup {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+.slot-type-online {
+  background: #faf5ff;
+  color: #9333ea;
+  border: 1px solid #e9d5ff;
 }
 `;

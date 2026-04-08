@@ -17,6 +17,13 @@ export const scheduleEventTypeEnum = pgEnum("schedule_event_type", [
   "CUSTOM",
 ]);
 
+export const classTypeEnum = pgEnum("class_type", [
+  "LECTURE",
+  "LAB",
+  "MAKEUP_CLASS",
+  "ONLINE_SESSION",
+]);
+
 export const scheduleEvents = pgTable(
   "schedule_events",
   {
@@ -36,6 +43,7 @@ export const scheduleEvents = pgTable(
     eventType: scheduleEventTypeEnum("event_type")
       .notNull()
       .default("LIVE_CLASS"),
+    classType: classTypeEnum("class_type").default("LECTURE"),
     startTime: timestamp("start_time", { withTimezone: true }).notNull(),
     endTime: timestamp("end_time", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })

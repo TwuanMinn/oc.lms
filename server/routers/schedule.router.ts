@@ -7,6 +7,7 @@ import { users } from "@/server/db/schema/users";
 import { eq, isNull } from "drizzle-orm";
 
 const eventTypeEnum = z.enum(["LIVE_CLASS", "ASSIGNMENT", "QA_SESSION", "MILESTONE", "CUSTOM"]);
+const classTypeEnum = z.enum(["LECTURE", "LAB", "MAKEUP_CLASS", "ONLINE_SESSION"]);
 
 export const scheduleRouter = router({
   // ── Get schedules for a specific course ──
@@ -31,6 +32,7 @@ export const scheduleRouter = router({
         id: courses.id,
         title: courses.title,
         courseCode: courses.courseCode,
+        group: courses.group,
         teacherName: users.name,
       })
       .from(courses)
@@ -49,6 +51,7 @@ export const scheduleRouter = router({
         description: z.string().optional(),
         room: z.string().optional(),
         eventType: eventTypeEnum.default("LIVE_CLASS"),
+        classType: classTypeEnum.default("LECTURE"),
         startTime: z.string().min(1, "Start time is required"),
         endTime: z.string().min(1, "End time is required"),
       })
@@ -69,6 +72,7 @@ export const scheduleRouter = router({
         description: z.string().optional(),
         room: z.string().optional(),
         eventType: eventTypeEnum.optional(),
+        classType: classTypeEnum.optional(),
         startTime: z.string().optional(),
         endTime: z.string().optional(),
       })

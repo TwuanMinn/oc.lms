@@ -9,8 +9,8 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF & autotable are imported dynamically inside the export handler
+// to avoid SSR crashes (they depend on browser APIs like window/document)
 import {
   Search,
   Shield,
@@ -924,9 +924,9 @@ export default function AdminUsersPage() {
             <button
               onClick={() => setPreviewUser(row.original)}
               title="Preview user"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-violet-500/70 transition-all hover:bg-violet-500/10 hover:text-violet-500 hover:scale-110 active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-violet-500/70 transition-all hover:bg-violet-500/10 hover:text-violet-500 hover:scale-110 active:scale-95"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
+              <ExternalLink className="h-5 w-5" />
             </button>
             {/* Pin */}
             <button
@@ -939,13 +939,13 @@ export default function AdminUsersPage() {
                 toast.success(pinnedUsers.has(row.original.id) ? "Unpinned" : "Pinned!");
               }}
               title={pinnedUsers.has(row.original.id) ? "Unpin user" : "Pin user"}
-              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110 active:scale-95 ${
+              className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all hover:scale-110 active:scale-95 ${
                 pinnedUsers.has(row.original.id)
                   ? "text-orange-500 bg-orange-500/10"
                   : "text-muted-foreground/50 hover:bg-orange-500/10 hover:text-orange-500"
               }`}
             >
-              <Pin className="h-3.5 w-3.5" />
+              <Pin className="h-5 w-5" />
             </button>
             {/* Export */}
             <button
@@ -961,17 +961,17 @@ export default function AdminUsersPage() {
                 URL.revokeObjectURL(url);
               }}
               title="Export user as CSV"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-teal-500/70 transition-all hover:bg-teal-500/10 hover:text-teal-500 hover:scale-110 active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-teal-500/70 transition-all hover:bg-teal-500/10 hover:text-teal-500 hover:scale-110 active:scale-95"
             >
-              <Download className="h-3.5 w-3.5" />
+              <Download className="h-5 w-5" />
             </button>
             {/* Edit */}
             <button
               onClick={() => setEditingUser(row.original)}
               title="Edit user"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-blue-500/70 transition-all hover:bg-blue-500/10 hover:text-blue-500 hover:scale-110 active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-blue-500/70 transition-all hover:bg-blue-500/10 hover:text-blue-500 hover:scale-110 active:scale-95"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-5 w-5" />
             </button>
             {/* Ban / Unban */}
             <button
@@ -981,16 +981,16 @@ export default function AdminUsersPage() {
                   : banUser.mutate({ userId: row.original.id })
               }
               title={isBanned ? "Unban user" : "Ban user"}
-              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110 active:scale-95 ${
+              className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all hover:scale-110 active:scale-95 ${
                 isBanned
                   ? "text-emerald-500 hover:bg-emerald-500/10"
                   : "text-amber-500 hover:bg-amber-500/10"
               }`}
             >
               {isBanned ? (
-                <Shield className="h-3.5 w-3.5" />
+                <Shield className="h-5 w-5" />
               ) : (
-                <ShieldOff className="h-3.5 w-3.5" />
+                <ShieldOff className="h-5 w-5" />
               )}
             </button>
             {/* Delete */}
@@ -1001,9 +1001,9 @@ export default function AdminUsersPage() {
                 }
               }}
               title="Delete user"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500/70 transition-all hover:bg-red-500/10 hover:text-red-500 hover:scale-110 active:scale-95"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-red-500/70 transition-all hover:bg-red-500/10 hover:text-red-500 hover:scale-110 active:scale-95"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-5 w-5" />
             </button>
           </div>
         );
@@ -1021,9 +1021,22 @@ export default function AdminUsersPage() {
             <button
               onClick={async () => {
                 try {
-                  // Fetch ALL users regardless of current filters
-                  const result = await utils.admin.getUsers.fetch({ limit: 9999, offset: 0 });
-                  const allUsers = (result?.users ?? []) as UserRow[];
+                  // Dynamically import to avoid SSR issues
+                  const { default: jsPDF } = await import("jspdf");
+                  const { default: autoTable } = await import("jspdf-autotable");
+
+                  // Fetch ALL users in batches (router max is 500)
+                  const batchSize = 500;
+                  let offset = 0;
+                  let allUsers: UserRow[] = [];
+                  let hasMore = true;
+                  while (hasMore) {
+                    const result = await utils.admin.getUsers.fetch({ limit: batchSize, offset });
+                    const batch = (result?.users ?? []) as UserRow[];
+                    allUsers = allUsers.concat(batch);
+                    offset += batchSize;
+                    hasMore = batch.length === batchSize;
+                  }
 
                   if (allUsers.length === 0) {
                     toast.error("No users to export");

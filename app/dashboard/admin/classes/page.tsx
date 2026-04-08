@@ -26,6 +26,7 @@ interface SessionRow {
   courseId: string;
   title: string;
   courseTitle: string;
+  courseGroup: string | null;
   teacherName: string;
   scheduledAt: string | Date;
   createdAt: string | Date;
@@ -71,19 +72,21 @@ export default function AdminClassesPage() {
   const [title, setTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [weekCount, setWeekCount] = useState(15);
+  const [group, setGroup] = useState("");
   const [createMode, setCreateMode] = useState<"single" | "multi">("multi");
 
   // Group sessions by courseTitle
   const groupedSessions = useMemo(() => {
     if (!data?.sessions) return [];
 
-    const grouped: Record<string, { courseTitle: string; courseId: string; teacherName: string; sessions: SessionRow[] }> = {};
+    const grouped: Record<string, { courseTitle: string; courseId: string; courseGroup: string | null; teacherName: string; sessions: SessionRow[] }> = {};
 
     for (const s of data.sessions) {
       if (!grouped[s.courseTitle]) {
         grouped[s.courseTitle] = {
           courseTitle: s.courseTitle,
           courseId: s.courseId,
+          courseGroup: s.courseGroup,
           teacherName: s.teacherName,
           sessions: [],
         };
@@ -106,6 +109,7 @@ export default function AdminClassesPage() {
     setTitle("");
     setScheduledAt("");
     setWeekCount(15);
+    setGroup("");
   }
 
   function handleCreate(e: React.FormEvent) {
@@ -119,10 +123,11 @@ export default function AdminClassesPage() {
         teacherId,
         weekCount,
         startDate: scheduledAt,
+        group: group || undefined,
       });
     } else {
       if (!classCode || !courseName || !teacherId || !title || !scheduledAt) return;
-      createSession.mutate({ classCode, courseName, teacherId, title, scheduledAt });
+      createSession.mutate({ classCode, courseName, teacherId, title, scheduledAt, group: group || undefined });
     }
   }
 
@@ -300,6 +305,21 @@ export default function AdminClassesPage() {
                   </p>
                 )}
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
+                  Group / Section
+                </label>
+                <input
+                  type="text"
+                  value={group}
+                  onChange={(e) => setGroup(e.target.value)}
+                  placeholder="e.g. Group A, Section 1"
+                  className="w-full rounded-xl border border-border/60 bg-background px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Optional — for organizing multiple sections
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end pt-2">
@@ -361,7 +381,7 @@ function CourseGroupCard({
   onDelete,
   isDeleting,
 }: {
-  group: { courseTitle: string; courseId: string; teacherName: string; sessions: SessionRow[] };
+  group: { courseTitle: string; courseId: string; courseGroup: string | null; teacherName: string; sessions: SessionRow[] };
   index: number;
   onDelete: (sessionId: string) => void;
   isDeleting: boolean;
@@ -396,7 +416,7 @@ function CourseGroupCard({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Teacher: {group.teacherName} · {group.sessions.length} week{group.sessions.length !== 1 ? "s" : ""}
+              Teacher: {group.teacherName}{group.courseGroup ? ` · Group ${group.courseGroup}` : ""} · {group.sessions.length} week{group.sessions.length !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">

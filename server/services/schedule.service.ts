@@ -20,6 +20,7 @@ export async function getCourseSchedules(courseId: string) {
       description: scheduleEvents.description,
       room: scheduleEvents.room,
       eventType: scheduleEvents.eventType,
+      classType: scheduleEvents.classType,
       startTime: scheduleEvents.startTime,
       endTime: scheduleEvents.endTime,
     })
@@ -46,6 +47,7 @@ export async function getUserSchedules(
         description: scheduleEvents.description,
         room: scheduleEvents.room,
         eventType: scheduleEvents.eventType,
+        classType: scheduleEvents.classType,
         startTime: scheduleEvents.startTime,
         endTime: scheduleEvents.endTime,
       })
@@ -67,6 +69,7 @@ export async function getUserSchedules(
         description: scheduleEvents.description,
         room: scheduleEvents.room,
         eventType: scheduleEvents.eventType,
+        classType: scheduleEvents.classType,
         startTime: scheduleEvents.startTime,
         endTime: scheduleEvents.endTime,
       })
@@ -96,6 +99,7 @@ export async function getUserSchedules(
       description: scheduleEvents.description,
       room: scheduleEvents.room,
       eventType: scheduleEvents.eventType,
+      classType: scheduleEvents.classType,
       startTime: scheduleEvents.startTime,
       endTime: scheduleEvents.endTime,
     })
@@ -114,6 +118,7 @@ export async function createScheduleEvent(input: {
   description?: string;
   room?: string;
   eventType: "LIVE_CLASS" | "ASSIGNMENT" | "QA_SESSION" | "MILESTONE" | "CUSTOM";
+  classType?: "LECTURE" | "LAB" | "MAKEUP_CLASS" | "ONLINE_SESSION";
   startTime: string;
   endTime: string;
 }) {
@@ -137,6 +142,7 @@ export async function createScheduleEvent(input: {
       description: input.description || null,
       room: input.room || null,
       eventType: input.eventType,
+      classType: input.classType || "LECTURE",
       startTime: new Date(input.startTime),
       endTime: new Date(input.endTime),
     })
@@ -153,6 +159,7 @@ export async function updateScheduleEvent(input: {
   description?: string;
   room?: string;
   eventType?: "LIVE_CLASS" | "ASSIGNMENT" | "QA_SESSION" | "MILESTONE" | "CUSTOM";
+  classType?: "LECTURE" | "LAB" | "MAKEUP_CLASS" | "ONLINE_SESSION";
   startTime?: string;
   endTime?: string;
 }) {
@@ -170,6 +177,7 @@ export async function updateScheduleEvent(input: {
   if (input.description !== undefined) updateData.description = input.description;
   if (input.room !== undefined) updateData.room = input.room;
   if (input.eventType) updateData.eventType = input.eventType;
+  if (input.classType) updateData.classType = input.classType;
   if (input.startTime) updateData.startTime = new Date(input.startTime);
   if (input.endTime) updateData.endTime = new Date(input.endTime);
 

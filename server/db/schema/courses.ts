@@ -45,6 +45,7 @@ export const courses = pgTable(
     categoryId: uuid("category_id").references(() => categories.id, {
       onDelete: "set null",
     }),
+    group: text("group"),
     startDate: timestamp("start_date", { withTimezone: true }),
     totalDuration: integer("total_duration").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })

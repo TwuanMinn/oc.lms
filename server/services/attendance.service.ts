@@ -16,6 +16,7 @@ export async function createClassSession(input: {
   teacherId: string;
   title: string;
   scheduledAt: string;
+  group?: string;
 }) {
   let [course] = await db
     .select()
@@ -36,7 +37,8 @@ export async function createClassSession(input: {
       .values({
         title: input.courseName,
         slug,
-        teacherId: input.teacherId, // assign class session teacher as default course teacher
+        teacherId: input.teacherId,
+        group: input.group || null,
         status: "PUBLISHED",
         approved: true,
       })
@@ -69,6 +71,7 @@ export async function getClassSessions(input: {
     courseId: string;
     title: string;
     courseTitle: string;
+    courseGroup: string | null;
     teacherName: string;
     scheduledAt: Date;
     createdAt: Date;
@@ -83,6 +86,7 @@ export async function getClassSessions(input: {
         cs.course_id AS "courseId",
         cs.title,
         c.title AS "courseTitle",
+        c."group" AS "courseGroup",
         u.name AS "teacherName",
         cs.scheduled_at AS "scheduledAt",
         cs.created_at AS "createdAt",
@@ -120,6 +124,7 @@ export async function batchCreateSessions(input: {
   teacherId: string;
   weekCount: number;
   startDate: string;
+  group?: string;
 }) {
   // Find or create the course
   let [course] = await db
@@ -142,6 +147,7 @@ export async function batchCreateSessions(input: {
         title: input.courseName,
         slug,
         teacherId: input.teacherId,
+        group: input.group || null,
         status: "PUBLISHED",
         approved: true,
       })

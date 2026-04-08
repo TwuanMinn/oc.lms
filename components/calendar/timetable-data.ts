@@ -18,6 +18,7 @@ export const DAY_SHORT: Record<Day, string> = {
 };
 
 export const PERIODS: Period[] = [
+  { id: 8, label: "Period 8", start: "08:00", end: "12:30" },
   { id: 1, label: "Period 1", start: "12:00", end: "13:15" },
   { id: 2, label: "Period 2", start: "13:20", end: "14:35" },
   { id: 3, label: "Period 3", start: "14:40", end: "15:55" },

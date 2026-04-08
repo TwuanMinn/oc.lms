@@ -12,6 +12,7 @@ export const attendanceRouter = router({
         teacherId: z.string().uuid(),
         title: z.string().min(1, "Title is required"),
         scheduledAt: z.string().min(1, "Schedule time is required"),
+        group: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -27,6 +28,7 @@ export const attendanceRouter = router({
         teacherId: z.string().uuid(),
         weekCount: z.number().min(1).max(52),
         startDate: z.string().min(1, "Start date is required"),
+        group: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
